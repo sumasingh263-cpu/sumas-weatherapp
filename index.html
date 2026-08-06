@@ -10,69 +10,101 @@
 <body>
     <canvas id="particle-canvas"></canvas>
     <div class="container">
-        <h1><i class="fa-solid fa-cloud-sun"></i> WeatherNow</h1>
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <button id="menu-btn"><i class="fa-solid fa-bars-staggered"></i></button>
+            <div class="location-title">
+                <span id="city-name">Helsinki</span>
+                <div class="loc-dot"></div>
+            </div>
+            <button id="search-toggle"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+
+        <!-- Hidden Search Bar (Toggled or Always Accessible) -->
         <div class="search-box">
             <input type="text" id="city-input" placeholder="Search city...">
-            <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            <button id="search-btn">Search</button>
             <button id="geo-btn" title="Use current location"><i class="fa-solid fa-location-crosshairs"></i></button>
         </div>
-        <div class="recent-searches">
-            <span>Recent Searches</span>
+        <div class="recent-searches" id="recent-container">
             <div id="recent-list"></div>
         </div>
-        <div id="weather-card" class="weather-card hidden">
-            <h2 id="city-name"></h2>
-            <div class="weather-icon"><i id="weather-icon-i" class="fa-solid fa-sun"></i></div>
-            <p id="weather-desc" class="desc"></p>
-            <h3 id="temp"></h3>
-            <p id="high-low" class="high-low"></p>
-            
-            <div class="details-grid">
-                <div class="detail-item"><i class="fa-solid fa-droplet"></i> <span id="humidity"></span></div>
-                <div class="detail-item"><i class="fa-solid fa-wind"></i> <span id="wind"></span></div>
+
+        <!-- Main Weather Display -->
+        <div id="weather-card" class="weather-card">
+            <div class="main-temp-section">
+                <h2 id="temp">21°</h2>
+                <p id="high-low">High: 22° Low: 15°</p>
+                <p id="weather-desc" class="desc">Sunny</p>
             </div>
 
-            <!-- Environmental Health Metrics -->
-            <div class="env-container">
-                <div class="env-card">
-                    <i class="fa-solid fa-lungs"></i>
-                    <div>
-                        <small>AQI (Air Quality)</small>
-                        <span id="aqi-val">--</span>
-                    </div>
-                </div>
-                <div class="env-card">
-                    <i class="fa-solid fa-sun-plant-wilt"></i>
-                    <div>
-                        <small>UV Index</small>
-                        <span id="uv-val">--</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Smart Recommendations -->
-            <div class="recommendations-box">
-                <h3><i class="fa-solid fa-lightbulb"></i> Smart Recommendations</h3>
-                <p id="rec-text">Loading recommendations...</p>
-            </div>
-
-            <div class="sun-times">
-                <div><i class="fa-solid fa-sunrise"></i> <span id="sunrise"></span></div>
-                <div><i class="fa-solid fa-sunset"></i> <span id="sunset"></span></div>
-            </div>
-
-            <div class="hourly-section">
-                <h3>Hourly Weather</h3>
+            <!-- Hourly Weather -->
+            <div class="card-box hourly-section">
+                <div class="section-title"><i class="fa-regular fa-clock"></i> Hourly weather</div>
                 <div id="hourly-container" class="hourly-container"></div>
             </div>
 
-            <div class="forecast-section">
-                <h3>5-Day Forecast</h3>
+            <!-- 5-Day Forecast -->
+            <div class="card-box forecast-section">
+                <div class="section-title"><i class="fa-regular fa-calendar"></i> Weather forecast</div>
                 <div id="forecast-container" class="forecast-container"></div>
+                <button class="extended-btn">Extended forecast</button>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <!-- UV Index -->
+                <div class="metric-card">
+                    <div class="metric-label"><i class="fa-solid fa-sun"></i> UV index</div>
+                    <div class="metric-value" id="uv-title">Low</div>
+                    <div class="uv-number" id="uv-num">1</div>
+                    <div class="uv-bar"><div class="uv-progress" id="uv-progress"></div></div>
+                    <small id="uv-desc">Almost no risk of sunburn</small>
+                </div>
+
+                <!-- Feels Like -->
+                <div class="metric-card">
+                    <div class="metric-label"><i class="fa-solid fa-temperature-half"></i> Feels like</div>
+                    <div class="metric-large" id="feels-val">21°</div>
+                    <small id="feels-desc">Actual temperature: 21°</small>
+                </div>
+
+                <!-- Wind -->
+                <div class="metric-card">
+                    <div class="metric-label"><i class="fa-solid fa-wind"></i> Wind</div>
+                    <div class="wind-circle">
+                        <div class="wind-arrow" id="wind-arrow"><i class="fa-solid fa-arrow-up"></i></div>
+                        <span id="wind-speed">3</span>
+                        <small>m/s</small>
+                    </div>
+                    <small id="wind-desc">SW wind, flags are unfurled</small>
+                </div>
+
+                <!-- Sunset / Sunrise -->
+                <div class="metric-card">
+                    <div class="metric-label"><i class="fa-solid fa-sunset"></i> Sunset</div>
+                    <div class="metric-large" id="sunset-time">9:42 pm</div>
+                    <div class="wave-line"></div>
+                    <small id="sunrise-time">Sunrise: 4:46 am</small>
+                </div>
+
+                <!-- Humidity -->
+                <div class="metric-card">
+                    <div class="metric-label"><i class="fa-solid fa-droplet"></i> Humidity</div>
+                    <div class="metric-large" id="humidity-val">73 %</div>
+                    <small id="humidity-desc">Fairly humid, dew is likely to form</small>
+                </div>
+
+                <!-- Visibility -->
+                <div class="metric-card">
+                    <div class="metric-label"><i class="fa-solid fa-eye"></i> Visibility</div>
+                    <div class="metric-large" id="vis-val">23 km</div>
+                    <div class="vis-slider"><div class="vis-thumb"></div></div>
+                    <small id="vis-desc">Excellent visibility</small>
+                </div>
             </div>
         </div>
     </div>
     <script src="script.js"></script>
 </body>
 </html>
-
