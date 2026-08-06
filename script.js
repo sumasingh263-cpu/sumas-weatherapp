@@ -62,7 +62,7 @@ function animateParticles() {
 initParticles();
 animateParticles();
 
-// Weather Functions
+// Weather Event Listeners
 searchBtn.addEventListener("click", () => {
     const city = cityInput.value.trim();
     if (city) fetchWeather(city);
@@ -77,8 +77,19 @@ cityInput.addEventListener("keypress", (e) => {
 
 geoBtn.addEventListener("click", () => {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            fetchWeatherByCoords(position.coords.latitude, position.coords.longitude);
+        navigator.geolocation.getCurrentPosition(async position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            try {
+                // Reverse geocode to get the actual city/town name
+                const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const revData = await revRes.json();
+                const cityName = revData.address.city || revData.address.town || revData.address.village || revData.address.county || "Current Location";
+                fetchWeatherByCoords(lat, lon, cityName);
+                updateRecentSearches(cityName);
+            } catch {
+                fetchWeatherByCoords(lat, lon, "Current Location");
+            }
         });
     }
 });
@@ -113,58 +124,102 @@ async function fetchWeather(city) {
             return;
         }
         const { latitude, longitude, name, country } = geoData.results[0];
-        fetchWeatherByCoords(latitude, longitude, `${name}, ${country}`);
+        const displayName = `${name}, ${country || ''}`;
+        fetchWeatherByCoords(latitude, longitude, displayName);
         updateRecentSearches(name);
     } catch (err) {
         console.error(err);
     }
 }
 
-async function fetchWeatherByCoords(lat, lon, displayName = "Current Location") {
+async function fetchWeatherByCoords(lat, lon, locationName) {
     try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto`);
+        // Fetch Weather and UV Index data
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,uv_index&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`);
         const data = await res.json();
-        displayWeather(data, displayName);
+
+        // Fetch Air Quality data
+        let aqiText = "Good (15)";
+        try {
+            const aqiRes = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi`);
+            const aqiData = await aqiRes.json();
+            const aqiVal = aqiData.current?.european_aqi;
+            if (aqiVal !== undefined) {
+                if (aqiVal <= 20) aqiText = `Good (${aqiVal})`;
+                else if (aqiVal <= 40) aqiText = `Fair (${aqiVal})`;
+                else if (aqiVal <= 60) aqiText = `Moderate (${aqiVal})`;
+                else if (aqiVal <= 80) aqiText = `Poor (${aqiVal})`;
+                else aqiText = `Very Poor (${aqiVal})`;
+            }
+        } catch (e) {
+            console.log("AQI fetch failed, using default");
+        }
+
+        displayWeather(data, locationName, aqiText);
     } catch (err) {
         console.error(err);
     }
 }
 
-function displayWeather(data, locationName) {
+function displayWeather(data, locationName, aqiText) {
     weatherCard.classList.remove("hidden");
     document.getElementById("city-name").innerText = locationName;
     
     const temp = Math.round(data.current.temperature_2m);
+    const weatherCode = data.current.weather_code;
+    const windSpeed = data.current.wind_speed_10m;
+    
     document.getElementById("temp").innerText = `${temp}°C`;
     document.getElementById("humidity").innerText = `Humidity: ${data.current.relative_humidity_2m}%`;
-    document.getElementById("wind").innerText = `Wind: ${data.current.wind_speed_10m} m/s`;
+    document.getElementById("wind").innerText = `Wind: ${windSpeed} m/s`;
     
     const high = Math.round(data.daily.temperature_2m_max[0]);
     const low = Math.round(data.daily.temperature_2m_min[0]);
     document.getElementById("high-low").innerText = `High: ${high}° | Low: ${low}°`;
 
-    document.getElementById("aqi-val").innerText = "Good (32)";
-    document.getElementById("uv-val").innerText = "Moderate (3.5)";
+    // Dynamic UV Index
+    const uvMax = data.daily.uv_index_max ? data.daily.uv_index_max[0] : 3.0;
+    let uvCategory = "Low";
+    if (uvMax >= 3 && uvMax < 6) uvCategory = "Moderate";
+    else if (uvMax >= 6 && uvMax < 8) uvCategory = "High";
+    else if (uvMax >= 8) uvCategory = "Very High";
+    document.getElementById("uv-val").innerText = `${uvCategory} (${uvMax})`;
 
+    // Dynamic AQI
+    document.getElementById("aqi-val").innerText = aqiText;
+
+    // Dynamic Smart Recommendations based on weather code, temp, wind, and UV
     let rec = "Enjoy your day outside!";
-    if (temp < 10) {
-        rec = "It's quite chilly! Make sure to wear a heavy jacket, scarf, and warm layers.";
+    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode)) {
+        rec = "Rain is expected! Don't forget to take an umbrella and wear waterproof shoes.";
+    } else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
+        rec = "Snowy conditions outside! Bundle up in warm winter gear and watch out for slippery paths.";
+    } else if (windSpeed > 10) {
+        rec = "It's quite windy today! A windbreaker jacket is recommended if you're stepping out.";
+    } else if (temp < 0) {
+        rec = "Freezing temperatures! Wear heavy thermal layers, gloves, and a winter hat.";
+    } else if (temp < 10) {
+        rec = "Chilly weather! Make sure to wear a jacket, sweater, and warm layers.";
+    } else if (temp > 25 && uvMax >= 5) {
+        rec = "Hot and sunny! Stay hydrated, wear sunglasses, and apply sunscreen before heading out.";
     } else if (temp > 25) {
-        rec = "Warm weather ahead! Keep hydrated, wear sunglasses, and apply sunscreen.";
+        rec = "Warm weather ahead! Light clothing and a cold drink will keep you comfortable.";
     } else {
-        rec = "Pleasant weather! Perfect time for a walk or outdoor activity.";
+        rec = "Pleasant weather conditions! Great time for a walk, run, or outdoor activities.";
     }
     document.getElementById("rec-text").innerText = rec;
 
+    // Hourly forecast generator
     const hourlyContainer = document.getElementById("hourly-container");
     hourlyContainer.innerHTML = "";
     for (let i = 0; i < 8; i++) {
         const hourDiv = document.createElement("div");
         hourDiv.className = "hourly-item";
-        hourDiv.innerHTML = `<div>Now+${i}h</div><i class="fa-solid fa-cloud"></i><div>${Math.round(data.hourly.temperature_2m[i])}°</div>`;
+        hourDiv.innerHTML = `<div>+${i}h</div><i class="fa-solid fa-cloud"></i><div>${Math.round(data.hourly.temperature_2m[i])}°</div>`;
         hourlyContainer.appendChild(hourDiv);
     }
 
+    // 5-Day forecast generator
     const forecastContainer = document.getElementById("forecast-container");
     forecastContainer.innerHTML = "";
     for (let i = 1; i <= 5; i++) {
