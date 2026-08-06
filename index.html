@@ -14,19 +14,19 @@
         <div class="top-nav">
             <button id="menu-btn"><i class="fa-solid fa-bars-staggered"></i></button>
             <div class="location-title">
-                <span id="city-name">Helsinki</span>
+                <span id="city-name">Rantasalmi</span>
                 <div class="loc-dot"></div>
             </div>
             <button id="search-toggle"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
 
-        <!-- Hidden Search Bar (Toggled or Always Accessible) -->
+        <!-- Search Bar -->
         <div class="search-box">
             <input type="text" id="city-input" placeholder="Search city...">
             <button id="search-btn">Search</button>
             <button id="geo-btn" title="Use current location"><i class="fa-solid fa-location-crosshairs"></i></button>
         </div>
-        <div class="recent-searches" id="recent-container">
+        <div class="recent-searches">
             <div id="recent-list"></div>
         </div>
 
@@ -44,7 +44,7 @@
                 <div id="hourly-container" class="hourly-container"></div>
             </div>
 
-            <!-- 5-Day Forecast -->
+            <!-- Weather Forecast -->
             <div class="card-box forecast-section">
                 <div class="section-title"><i class="fa-regular fa-calendar"></i> Weather forecast</div>
                 <div id="forecast-container" class="forecast-container"></div>
@@ -77,7 +77,7 @@
                         <span id="wind-speed">3</span>
                         <small>m/s</small>
                     </div>
-                    <small id="wind-desc">SW wind, flags are unfurled</small>
+                    <small id="wind-desc">SW wind, light breeze</small>
                 </div>
 
                 <!-- Sunset / Sunrise -->
@@ -92,7 +92,14 @@
                 <div class="metric-card">
                     <div class="metric-label"><i class="fa-solid fa-droplet"></i> Humidity</div>
                     <div class="metric-large" id="humidity-val">73 %</div>
-                    <small id="humidity-desc">Fairly humid, dew is likely to form</small>
+                    <small id="humidity-desc">Fairly humid, dew is likely</small>
+                </div>
+
+                <!-- Air Quality (AQI) -->
+                <div class="metric-card">
+                    <div class="metric-label"><i class="fa-solid fa-lungs"></i> Air Quality (AQI)</div>
+                    <div class="metric-large" id="aqi-val">Good</div>
+                    <small id="aqi-desc">Air quality is ideal</small>
                 </div>
 
                 <!-- Visibility -->
