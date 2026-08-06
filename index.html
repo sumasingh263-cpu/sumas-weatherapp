@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherNow</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌤️ WeatherNow</h1>
+        
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="Enter city name">
+            <button id="searchBtn">Search</button>
+            <button id="locationBtn" title="Use Current Location">📍</button>
+        </div>
+
+        <!-- Recent Search History Section -->
+        <div class="recent-searches-container" id="recentSearchesContainer" style="display: none;">
+            <div class="recent-header">
+                <span>Recent Searches</span>
+                <button id="clearHistoryBtn" class="clear-history-btn">Clear</button>
+            </div>
+            <div class="recent-tags" id="recentTags"></div>
+        </div>
+
+        <div class="weather-card">
+            <h2 id="city">City Name</h2>
+            <img id="weather-icon" src="" alt="Weather Icon">
+            <p id="weather">Weather Condition</p>
+            <h3 id="temp">0°C</h3>
+            <p id="highLow" class="high-low">High: 0° | Low: 0°</p>
+            
+            <div class="details">
+                <p>💧 Humidity: <span id="humidity">0%</span></p>
+                <p>🌬️ Wind: <span id="wind">0 m/s</span></p>
+            </div>
+
+            <!-- Sunrise & Sunset Cards -->
+            <div class="sun-container">
+                <div class="sun-card">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <span>Sunrise</span>
+                    <span id="sunrise">--:--</span>
+                </div>
+                <div class="sun-card">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 16v6m0 0l-3-3m3 3l3-3M4 12h16M6 17a6 6 0 1012 0"/>
+                    </svg>
+                    <span>Sunset</span>
+                    <span id="sunset">--:--</span>
+                </div>
+            </div>
+
+            <!-- Hourly Weather Card -->
+            <div class="card-section">
+                <div class="section-title">
+                    <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    Hourly weather
+                </div>
+                <div class="hourly-scroll" id="hourlyContainer"></div>
+            </div>
+
+            <!-- 5-Day Forecast Card -->
+            <div class="card-section">
+                <div class="section-title">
+                    <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Weather forecast
+                </div>
+                <div id="dailyForecastContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
