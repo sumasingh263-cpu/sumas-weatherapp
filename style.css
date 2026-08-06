@@ -6,7 +6,7 @@
 }
 
 body {
-    background: linear-gradient(135deg, #1b263b, #0d1b2a, #415a77);
+    background: linear-gradient(135deg, #2980b9, #6dd5fa, #ffffff);
     min-height: 100vh;
     color: #fff;
     display: flex;
@@ -32,13 +32,13 @@ body {
     z-index: 2;
     width: 100%;
     max-width: 440px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 28px;
     padding: 20px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 }
 
 .top-nav {
@@ -49,7 +49,7 @@ body {
 }
 
 .top-nav button {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.25);
     border: none;
     color: #fff;
     width: 38px;
@@ -64,7 +64,7 @@ body {
 }
 
 .top-nav button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .location-title {
@@ -74,12 +74,13 @@ body {
 #city-name {
     font-size: 1.2rem;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .loc-dot {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
     background: #4ade80;
     border-radius: 50%;
     margin: 3px auto 0 auto;
@@ -89,7 +90,7 @@ body {
     display: flex;
     gap: 8px;
     margin-bottom: 15px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     padding: 6px;
     border-radius: 14px;
 }
@@ -105,11 +106,11 @@ body {
 }
 
 .search-box input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .search-box button {
-    background: #3b82f6;
+    background: #0284c7;
     color: #fff;
     border: none;
     padding: 8px 14px;
@@ -130,7 +131,7 @@ body {
 }
 
 .recent-tag {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.25);
     padding: 4px 10px;
     border-radius: 12px;
     font-size: 0.75rem;
@@ -147,23 +148,24 @@ body {
     font-weight: 300;
     line-height: 1;
     margin-bottom: 5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 #high-low {
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 4px;
 }
 
 .desc {
     font-size: 1.05rem;
     font-weight: 500;
-    color: #e2e8f0;
+    color: #f8fafc;
 }
 
 .card-box {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
     padding: 15px;
     margin-bottom: 15px;
@@ -171,11 +173,12 @@ body {
 
 .section-title {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 6px;
+    font-weight: 600;
 }
 
 .hourly-container {
@@ -201,7 +204,7 @@ body {
 
 .hourly-item i {
     font-size: 1.1rem;
-    color: #fbbf24;
+    color: #fef08a;
 }
 
 .forecast-container {
@@ -221,7 +224,7 @@ body {
 .forecast-bar {
     flex: 1;
     height: 4px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
     margin: 0 15px;
     position: relative;
@@ -230,14 +233,14 @@ body {
 .forecast-progress {
     position: absolute;
     height: 100%;
-    background: linear-gradient(90deg, #38bdf8, #fbbf24);
+    background: linear-gradient(90deg, #38bdf8, #fef08a);
     border-radius: 2px;
 }
 
 .extended-btn {
     width: 100%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: #fff;
     padding: 10px;
     border-radius: 14px;
@@ -248,7 +251,7 @@ body {
 }
 
 .extended-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .metrics-grid {
@@ -258,8 +261,8 @@ body {
 }
 
 .metric-card {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
     padding: 15px;
     display: flex;
@@ -270,10 +273,11 @@ body {
 
 .metric-label {
     font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     display: flex;
     align-items: center;
     gap: 6px;
+    font-weight: 600;
 }
 
 .metric-value {
@@ -289,7 +293,7 @@ body {
 .uv-bar {
     width: 100%;
     height: 5px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 3px;
     overflow: hidden;
     margin: 5px 0;
@@ -304,13 +308,13 @@ body {
 
 .metric-card small {
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.8);
     line-height: 1.2;
 }
 
 .metric-large {
-    font-size: 1.8rem;
-    font-weight: 400;
+    font-size: 1.6rem;
+    font-weight: 500;
     margin: 5px 0;
 }
 
@@ -318,7 +322,7 @@ body {
     position: relative;
     width: 50px;
     height: 50px;
-    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border: 2px dashed rgba(255, 255, 255, 0.5);
     border-radius: 50%;
     margin: 5px auto;
     display: flex;
@@ -342,14 +346,14 @@ body {
     top: 2px;
     right: 12px;
     font-size: 0.7rem;
-    color: #38bdf8;
+    color: #e0f2fe;
     transform: rotate(45deg);
 }
 
 .wave-line {
     width: 100%;
     height: 12px;
-    background: radial-gradient(circle, rgba(255,255,255,0.4) 10%, transparent 11%);
+    background: radial-gradient(circle, rgba(255,255,255,0.6) 10%, transparent 11%);
     background-size: 10px 12px;
     margin: 5px 0;
 }
@@ -357,7 +361,7 @@ body {
 .vis-slider {
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
     position: relative;
     margin: 10px 0 5px 0;
