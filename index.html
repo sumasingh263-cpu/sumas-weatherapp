@@ -5,85 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeatherNow</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-
+    <canvas id="particle-canvas"></canvas>
     <div class="container">
-        <h1>🌤️ WeatherNow</h1>
-        
+        <h1><i class="fa-solid fa-cloud-sun"></i> WeatherNow</h1>
         <div class="search-box">
-            <input type="text" id="cityInput" placeholder="Enter city name">
-            <button id="searchBtn">Search</button>
-            <button id="locationBtn" title="Use Current Location">📍</button>
+            <input type="text" id="city-input" placeholder="Search city...">
+            <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            <button id="geo-btn" title="Use current location"><i class="fa-solid fa-location-crosshairs"></i></button>
         </div>
-
-        <!-- Recent Search History Section -->
-        <div class="recent-searches-container" id="recentSearchesContainer" style="display: none;">
-            <div class="recent-header">
-                <span>Recent Searches</span>
-                <button id="clearHistoryBtn" class="clear-history-btn">Clear</button>
-            </div>
-            <div class="recent-tags" id="recentTags"></div>
+        <div class="recent-searches">
+            <span>Recent Searches</span>
+            <div id="recent-list"></div>
         </div>
-
-        <div class="weather-card">
-            <h2 id="city">City Name</h2>
-            <img id="weather-icon" src="" alt="Weather Icon">
-            <p id="weather">Weather Condition</p>
-            <h3 id="temp">0°C</h3>
-            <p id="highLow" class="high-low">High: 0° | Low: 0°</p>
+        <div id="weather-card" class="weather-card hidden">
+            <h2 id="city-name"></h2>
+            <div class="weather-icon"><i id="weather-icon-i" class="fa-solid fa-sun"></i></div>
+            <p id="weather-desc" class="desc"></p>
+            <h3 id="temp"></h3>
+            <p id="high-low" class="high-low"></p>
             
-            <div class="details">
-                <p>💧 Humidity: <span id="humidity">0%</span></p>
-                <p>🌬️ Wind: <span id="wind">0 m/s</span></p>
+            <div class="details-grid">
+                <div class="detail-item"><i class="fa-solid fa-droplet"></i> <span id="humidity"></span></div>
+                <div class="detail-item"><i class="fa-solid fa-wind"></i> <span id="wind"></span></div>
             </div>
 
-            <!-- Sunrise & Sunset Cards -->
-            <div class="sun-container">
-                <div class="sun-card">
-                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="5"/>
-                        <line x1="12" y1="1" x2="12" y2="3"/>
-                        <line x1="12" y1="21" x2="12" y2="23"/>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                        <line x1="1" y1="12" x2="3" y2="12"/>
-                        <line x1="21" y1="12" x2="23" y2="12"/>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                    </svg>
-                    <span>Sunrise</span>
-                    <span id="sunrise">--:--</span>
+            <!-- Environmental Health Metrics -->
+            <div class="env-container">
+                <div class="env-card">
+                    <i class="fa-solid fa-lungs"></i>
+                    <div>
+                        <small>AQI (Air Quality)</small>
+                        <span id="aqi-val">--</span>
+                    </div>
                 </div>
-                <div class="sun-card">
-                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 16v6m0 0l-3-3m3 3l3-3M4 12h16M6 17a6 6 0 1012 0"/>
-                    </svg>
-                    <span>Sunset</span>
-                    <span id="sunset">--:--</span>
+                <div class="env-card">
+                    <i class="fa-solid fa-sun-plant-wilt"></i>
+                    <div>
+                        <small>UV Index</small>
+                        <span id="uv-val">--</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Hourly Weather Card -->
-            <div class="card-section">
-                <div class="section-title">
-                    <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
-                    Hourly weather
-                </div>
-                <div class="hourly-scroll" id="hourlyContainer"></div>
+            <!-- Smart Recommendations -->
+            <div class="recommendations-box">
+                <h3><i class="fa-solid fa-lightbulb"></i> Smart Recommendations</h3>
+                <p id="rec-text">Loading recommendations...</p>
             </div>
 
-            <!-- 5-Day Forecast Card -->
-            <div class="card-section">
-                <div class="section-title">
-                    <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Weather forecast
-                </div>
-                <div id="dailyForecastContainer"></div>
+            <div class="sun-times">
+                <div><i class="fa-solid fa-sunrise"></i> <span id="sunrise"></span></div>
+                <div><i class="fa-solid fa-sunset"></i> <span id="sunset"></span></div>
+            </div>
+
+            <div class="hourly-section">
+                <h3>Hourly Weather</h3>
+                <div id="hourly-container" class="hourly-container"></div>
+            </div>
+
+            <div class="forecast-section">
+                <h3>5-Day Forecast</h3>
+                <div id="forecast-container" class="forecast-container"></div>
             </div>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
