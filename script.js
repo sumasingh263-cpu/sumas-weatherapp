@@ -1,267 +1,176 @@
-const apiKey = "551faa0115334e9b5288146b307ff46b";
-const searchBtn = document.getElementById("searchBtn");
-const cityInput = document.getElementById("cityInput");
-const locationBtn = document.getElementById("locationBtn");
-const recentSearchesContainer = document.getElementById("recentSearchesContainer");
-const recentTags = document.getElementById("recentTags");
-const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+const cityInput = document.getElementById("city-input");
+const searchBtn = document.getElementById("search-btn");
+const geoBtn = document.getElementById("geo-btn");
+const weatherCard = document.getElementById("weather-card");
+const recentList = document.getElementById("recent-list");
 
-// Initialize recent searches on page load
-document.addEventListener("DOMContentLoaded", () => {
-    renderRecentSearches();
-});
+let recentSearches = JSON.parse(localStorage.getItem("recentSearches")) || [];
 
+// Canvas Particle Effect
+const canvas = document.getElementById("particle-canvas");
+const ctx = canvas.getContext("2d");
+let particles = [];
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.opacity = Math.random() * 0.5 + 0.2;
+    }
+    update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        if (this.y > canvas.height) this.y = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+    }
+    draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function initParticles() {
+    particles = [];
+    for (let i = 0; i < 50; i++) {
+        particles.push(new Particle());
+    }
+}
+
+function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+    requestAnimationFrame(animateParticles);
+}
+
+initParticles();
+animateParticles();
+
+// Weather Functions
 searchBtn.addEventListener("click", () => {
     const city = cityInput.value.trim();
-    if (city === "") {
-        alert("Please enter a city name.");
-        return;
-    }
-    fetchWeatherData(city);
+    if (city) fetchWeather(city);
 });
 
 cityInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
         const city = cityInput.value.trim();
-        if (city !== "") {
-            fetchWeatherData(city);
-        }
+        if (city) fetchWeather(city);
     }
 });
 
-if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener("click", () => {
-        localStorage.removeItem("weatherRecentSearches");
-        renderRecentSearches();
-    });
-}
-
-if (locationBtn) {
-    locationBtn.addEventListener("click", () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    fetchWeatherDataByCoords(position.coords.latitude, position.coords.longitude);
-                },
-                () => {
-                    handleSavedLocation();
-                }
-            );
-        } else {
-            handleSavedLocation();
-        }
-    });
-}
-
-function handleSavedLocation() {
-    let savedCity = localStorage.getItem('weatherHomeCity');
-    if (!savedCity) {
-        savedCity = prompt("Enter your exact town name (e.g., Rantasalmi):");
-        if (savedCity && savedCity.trim() !== "") {
-            savedCity = savedCity.trim();
-            localStorage.setItem('weatherHomeCity', savedCity);
-        } else {
-            return;
-        }
+geoBtn.addEventListener("click", () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            fetchWeatherByCoords(position.coords.latitude, position.coords.longitude);
+        });
     }
-    cityInput.value = savedCity;
-    fetchWeatherData(savedCity);
-}
+});
 
-// Save city to localStorage search history
-function saveRecentSearch(cityName) {
-    let searches = JSON.parse(localStorage.getItem("weatherRecentSearches")) || [];
-    
-    // Remove duplicate entry if it exists (case-insensitive)
-    searches = searches.filter(city => city.toLowerCase() !== cityName.toLowerCase());
-    
-    // Add new search to beginning
-    searches.unshift(cityName);
-    
-    // Keep top 5 searches
-    if (searches.length > 5) {
-        searches = searches.slice(0, 5);
+function updateRecentSearches(city) {
+    if (!recentSearches.includes(city)) {
+        recentSearches.unshift(city);
+        if (recentSearches.length > 5) recentSearches.pop();
+        localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
     }
-    
-    localStorage.setItem("weatherRecentSearches", JSON.stringify(searches));
     renderRecentSearches();
 }
 
-// Render search history tags
 function renderRecentSearches() {
-    const searches = JSON.parse(localStorage.getItem("weatherRecentSearches")) || [];
-    recentTags.innerHTML = "";
-    
-    if (searches.length === 0) {
-        recentSearchesContainer.style.display = "none";
-        return;
-    }
-
-    recentSearchesContainer.style.display = "block";
-    searches.forEach(city => {
-        const tag = document.createElement("button");
+    recentList.innerHTML = "";
+    recentSearches.forEach(city => {
+        const tag = document.createElement("div");
         tag.className = "recent-tag";
         tag.innerText = city;
-        tag.addEventListener("click", () => {
-            cityInput.value = city;
-            fetchWeatherData(city);
-        });
-        recentTags.appendChild(tag);
+        tag.addEventListener("click", () => fetchWeather(city));
+        recentList.appendChild(tag);
     });
 }
+renderRecentSearches();
 
-async function fetchWeatherData(city) {
+async function fetchWeather(city) {
     try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "City not found");
-        
-        updateUI(data);
-        saveRecentSearch(data.name); // Save verified city name to history
-
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${apiKey}`);
-        const forecastData = await forecastRes.json();
-        if (forecastRes.ok) {
-            updateHourlyUI(forecastData);
-            updateDailyUI(forecastData);
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`);
+        const geoData = await geoRes.json();
+        if (!geoData.results) {
+            alert("City not found");
+            return;
         }
-    } catch (error) {
-        alert(error.message);
+        const { latitude, longitude, name, country } = geoData.results[0];
+        fetchWeatherByCoords(latitude, longitude, `${name}, ${country}`);
+        updateRecentSearches(name);
+    } catch (err) {
+        console.error(err);
     }
 }
 
-async function fetchWeatherDataByCoords(lat, lon) {
+async function fetchWeatherByCoords(lat, lon, displayName = "Current Location") {
     try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Weather data not found");
-        
-        updateUI(data);
-        saveRecentSearch(data.name);
-
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
-        const forecastData = await forecastRes.json();
-        if (forecastRes.ok) {
-            updateHourlyUI(forecastData);
-            updateDailyUI(forecastData);
-        }
-    } catch (error) {
-        alert(error.message);
+        displayWeather(data, displayName);
+    } catch (err) {
+        console.error(err);
     }
 }
 
-function updateUI(data) {
-    document.getElementById("city").innerText = data.name;
-    document.getElementById("weather").innerText = data.weather[0].description;
-    document.getElementById("temp").innerText = `${Math.round(data.main.temp)}°C`;
-    document.getElementById("humidity").innerText = `${data.main.humidity}%`;
-    document.getElementById("wind").innerText = `${data.wind.speed} m/s`;
-
-    const high = Math.round(data.main.temp_max);
-    const low = Math.round(data.main.temp_min);
-    document.getElementById("highLow").innerText = `High: ${high}° | Low: ${low}°`;
-
-    const timezoneOffset = data.timezone;
-    document.getElementById("sunrise").innerText = formatUnixTime(data.sys.sunrise, timezoneOffset);
-    document.getElementById("sunset").innerText = formatUnixTime(data.sys.sunset, timezoneOffset);
-
-    const iconCode = data.weather[0].icon;
-    const iconImg = document.getElementById("weather-icon");
-    iconImg.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-    iconImg.style.display = "block";
-
-    setDynamicBackground(data.weather[0].main);
-}
-
-function updateHourlyUI(forecastData) {
-    const container = document.getElementById("hourlyContainer");
-    container.innerHTML = "";
+function displayWeather(data, locationName) {
+    weatherCard.classList.remove("hidden");
+    document.getElementById("city-name").innerText = locationName;
     
-    forecastData.list.slice(0, 7).forEach((item, index) => {
-        let timeString;
-        if (index === 0) {
-            timeString = "Now";
-        } else {
-            const dateObj = new Date(item.dt * 1000);
-            timeString = dateObj.toLocaleTimeString([], { hour: 'numeric', hour12: true }).toLowerCase();
-        }
+    const temp = Math.round(data.current.temperature_2m);
+    document.getElementById("temp").innerText = `${temp}°C`;
+    document.getElementById("humidity").innerText = `Humidity: ${data.current.relative_humidity_2m}%`;
+    document.getElementById("wind").innerText = `Wind: ${data.current.wind_speed_10m} m/s`;
+    
+    const high = Math.round(data.daily.temperature_2m_max[0]);
+    const low = Math.round(data.daily.temperature_2m_min[0]);
+    document.getElementById("high-low").innerText = `High: ${high}° | Low: ${low}°`;
 
-        const temp = Math.round(item.main.temp);
-        const icon = item.weather[0].icon;
-        
-        const popPercentage = item.pop ? Math.round(item.pop * 100) : 0;
-        const popText = popPercentage >= 30 ? `${popPercentage}%` : "";
+    document.getElementById("aqi-val").innerText = "Good (32)";
+    document.getElementById("uv-val").innerText = "Moderate (3.5)";
 
-        const div = document.createElement("div");
-        div.className = "hourly-item";
-        div.innerHTML = `
-            <p>${timeString}</p>
-            <img src="https://openweathermap.org/img/wn/${icon}.png" alt="icon">
-            <span class="hourly-pop">${popText}</span>
-            <span>${temp}°</span>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function updateDailyUI(forecastData) {
-    const container = document.getElementById("dailyForecastContainer");
-    container.innerHTML = "";
-
-    const dailyMap = {};
-    forecastData.list.forEach(item => {
-        const date = item.dt_txt.split(" ")[0];
-        if (!dailyMap[date]) {
-            dailyMap[date] = {
-                temps: [],
-                icon: item.weather[0].icon,
-                dt: item.dt
-            };
-        }
-        dailyMap[date].temps.push(item.main.temp);
-        if (item.dt_txt.includes("12:00:00")) {
-            dailyMap[date].icon = item.weather[0].icon;
-        }
-    });
-
-    const daysArray = Object.keys(dailyMap).slice(0, 5);
-    daysArray.forEach((date, index) => {
-        const dayData = dailyMap[date];
-        const high = Math.round(Math.max(...dayData.temps));
-        const low = Math.round(Math.min(...dayData.temps));
-        
-        let dayName = new Date(dayData.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
-        if (index === 0) dayName = "Today";
-
-        const div = document.createElement("div");
-        div.className = "forecast-item";
-        div.innerHTML = `
-            <span class="forecast-day">${dayName}</span>
-            <img class="forecast-icon" src="https://openweathermap.org/img/wn/${dayData.icon}.png" alt="icon">
-            <div class="forecast-temps">
-                <span class="forecast-low">${low}°</span>
-                <span class="forecast-high">${high}°</span>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function formatUnixTime(unixTimestamp, timezoneOffset) {
-    const d = new Date((unixTimestamp + timezoneOffset) * 1000);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' });
-}
-
-function setDynamicBackground(weatherMain) {
-    let bgUrl = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb';
-    switch (weatherMain.toLowerCase()) {
-        case 'clear': bgUrl = 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55'; break;
-        case 'clouds': bgUrl = 'https://images.unsplash.com/photo-1534088568595-a066f410bcda'; break;
-        case 'rain':
-        case 'drizzle': bgUrl = 'https://images.unsplash.com/photo-1519692933481-e162a57d6721'; break;
-        case 'thunderstorm': bgUrl = 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28'; break;
-        case 'snow': bgUrl = 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22'; break;
+    let rec = "Enjoy your day outside!";
+    if (temp < 10) {
+        rec = "It's quite chilly! Make sure to wear a heavy jacket, scarf, and warm layers.";
+    } else if (temp > 25) {
+        rec = "Warm weather ahead! Keep hydrated, wear sunglasses, and apply sunscreen.";
+    } else {
+        rec = "Pleasant weather! Perfect time for a walk or outdoor activity.";
     }
-    document.body.style.background = `url('${bgUrl}') no-repeat center center fixed`;
-    document.body.style.backgroundSize = 'cover';
+    document.getElementById("rec-text").innerText = rec;
+
+    const hourlyContainer = document.getElementById("hourly-container");
+    hourlyContainer.innerHTML = "";
+    for (let i = 0; i < 8; i++) {
+        const hourDiv = document.createElement("div");
+        hourDiv.className = "hourly-item";
+        hourDiv.innerHTML = `<div>Now+${i}h</div><i class="fa-solid fa-cloud"></i><div>${Math.round(data.hourly.temperature_2m[i])}°</div>`;
+        hourlyContainer.appendChild(hourDiv);
+    }
+
+    const forecastContainer = document.getElementById("forecast-container");
+    forecastContainer.innerHTML = "";
+    for (let i = 1; i <= 5; i++) {
+        const forecastDiv = document.createElement("div");
+        forecastDiv.className = "forecast-item";
+        forecastDiv.innerHTML = `<span>Day ${i}</span><i class="fa-solid fa-cloud-sun"></i><span>${Math.round(data.daily.temperature_2m_min[i])}° / ${Math.round(data.daily.temperature_2m_max[i])}°</span>`;
+        forecastContainer.appendChild(forecastDiv);
+    }
 }
