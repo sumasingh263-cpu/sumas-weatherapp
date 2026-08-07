@@ -2,115 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeatherNow</title>
+    <title>SkyPulse Weather</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <canvas id="particle-canvas"></canvas>
-    <div class="container">
-        <!-- Top Navigation -->
-        <div class="top-nav">
-            <button id="menu-btn"><i class="fa-solid fa-bars-staggered"></i></button>
-            <div class="location-title">
-                <span id="city-name">Rantasalmi</span>
-                <div class="loc-dot"></div>
+<body class="sky-background">
+    <div class="weather-container">
+        <header>
+            <h1><i class="fa-solid fa-cloud-sun"></i> SkyPulse Weather</h1>
+            <div class="search-box">
+                <input type="text" id="city-input" placeholder="Search city...">
+                <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
-            <button id="search-toggle"><i class="fa-solid fa-magnifying-glass"></i></button>
-        </div>
+        </header>
 
-        <!-- Search Bar -->
-        <div class="search-box">
-            <input type="text" id="city-input" placeholder="Search city...">
-            <button id="search-btn">Search</button>
-            <button id="geo-btn" title="Use current location"><i class="fa-solid fa-location-crosshairs"></i></button>
-        </div>
-        <div class="recent-searches">
-            <div id="recent-list"></div>
-        </div>
-
-        <!-- Main Weather Display -->
-        <div id="weather-card" class="weather-card">
-            <div class="main-temp-section">
-                <h2 id="temp">21°</h2>
-                <p id="high-low">High: 22° Low: 15°</p>
-                <p id="weather-desc" class="desc">Sunny</p>
-            </div>
-
-            <!-- Hourly Weather -->
-            <div class="card-box hourly-section">
-                <div class="section-title"><i class="fa-regular fa-clock"></i> Hourly weather</div>
-                <div id="hourly-container" class="hourly-container"></div>
-            </div>
-
-            <!-- Weather Forecast -->
-            <div class="card-box forecast-section">
-                <div class="section-title"><i class="fa-regular fa-calendar"></i> Weather forecast</div>
-                <div id="forecast-container" class="forecast-container"></div>
-                <button class="extended-btn">Extended forecast</button>
-            </div>
-
-            <!-- Metrics Grid -->
-            <div class="metrics-grid">
-                <!-- UV Index -->
-                <div class="metric-card">
-                    <div class="metric-label"><i class="fa-solid fa-sun"></i> UV index</div>
-                    <div class="metric-value" id="uv-title">Low</div>
-                    <div class="uv-number" id="uv-num">1</div>
-                    <div class="uv-bar"><div class="uv-progress" id="uv-progress"></div></div>
-                    <small id="uv-desc">Almost no risk of sunburn</small>
+        <main id="weather-display">
+            <div class="current-weather">
+                <div class="location-info">
+                    <h2 id="city-name">Loading...</h2>
+                    <p id="date-time">--</p>
                 </div>
-
-                <!-- Feels Like -->
-                <div class="metric-card">
-                    <div class="metric-label"><i class="fa-solid fa-temperature-half"></i> Feels like</div>
-                    <div class="metric-large" id="feels-val">21°</div>
-                    <small id="feels-desc">Actual temperature: 21°</small>
-                </div>
-
-                <!-- Wind -->
-                <div class="metric-card">
-                    <div class="metric-label"><i class="fa-solid fa-wind"></i> Wind</div>
-                    <div class="wind-circle">
-                        <div class="wind-arrow" id="wind-arrow"><i class="fa-solid fa-arrow-up"></i></div>
-                        <span id="wind-speed">3</span>
-                        <small>m/s</small>
+                <div class="temp-condition">
+                    <div class="temp-box">
+                        <span id="temperature">--°C</span>
+                        <p id="condition">--</p>
                     </div>
-                    <small id="wind-desc">SW wind, light breeze</small>
-                </div>
-
-                <!-- Sunset / Sunrise -->
-                <div class="metric-card">
-                    <div class="metric-label"><i class="fa-solid fa-sunset"></i> Sunset</div>
-                    <div class="metric-large" id="sunset-time">9:42 pm</div>
-                    <div class="wave-line"></div>
-                    <small id="sunrise-time">Sunrise: 4:46 am</small>
-                </div>
-
-                <!-- Humidity -->
-                <div class="metric-card">
-                    <div class="metric-label"><i class="fa-solid fa-droplet"></i> Humidity</div>
-                    <div class="metric-large" id="humidity-val">73 %</div>
-                    <small id="humidity-desc">Fairly humid, dew is likely</small>
-                </div>
-
-                <!-- Air Quality (AQI) -->
-                <div class="metric-card">
-                    <div class="metric-label"><i class="fa-solid fa-lungs"></i> Air Quality (AQI)</div>
-                    <div class="metric-large" id="aqi-val">Good</div>
-                    <small id="aqi-desc">Air quality is ideal</small>
-                </div>
-
-                <!-- Visibility -->
-                <div class="metric-card">
-                    <div class="metric-label"><i class="fa-solid fa-eye"></i> Visibility</div>
-                    <div class="metric-large" id="vis-val">23 km</div>
-                    <div class="vis-slider"><div class="vis-thumb"></div></div>
-                    <small id="vis-desc">Excellent visibility</small>
+                    <div class="weather-icon-anim" id="weather-icon">
+                        <i class="fa-solid fa-sun"></i>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <i class="fa-solid fa-wind"></i>
+                    <div>
+                        <span>Wind Speed</span>
+                        <h3 id="wind-speed">-- km/h</h3>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <i class="fa-solid fa-droplet"></i>
+                    <div>
+                        <span>Humidity</span>
+                        <h3 id="humidity">--%</h3>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <i class="fa-solid fa-sun"></i>
+                    <div>
+                        <span>UV Index</span>
+                        <h3 id="uv-index">--</h3>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <i class="fa-solid fa-lungs"></i>
+                    <div>
+                        <span>Air Quality (AQI)</span>
+                        <h3 id="aqi">--</h3>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <i class="fa-solid fa-moon"></i>
+                    <div>
+                        <span>Sunset</span>
+                        <h3 id="sunset-time">--:--</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hourly-section">
+                <h3>Hourly Forecast</h3>
+                <div class="hourly-container" id="hourly-container">
+                    <!-- Hourly items dynamically loaded -->
+                </div>
+            </div>
+        </main>
     </div>
     <script src="script.js"></script>
 </body>
