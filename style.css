@@ -227,10 +227,15 @@ body {
 }
 
 .card-icon {
-    width: 15px;
-    height: 15px;
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
     stroke: currentColor;
     opacity: 0.85;
+    flex-shrink: 0;
     vertical-align: middle;
 }
 
@@ -240,14 +245,9 @@ body {
     align-items: center;
     margin-bottom: 8px;
 }
-.chart-toggle-pill {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.25);
-    color: white;
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 12px;
-    cursor: pointer;
+.forecast-view-toggles {
+    display: flex;
+    gap: 6px;
 }
 
 .hourly-scroll {
@@ -347,7 +347,7 @@ body {
     margin: 6px 0;
 }
 .uv-bar-fill {
-    width: 35%;
+    width: 15%;
     height: 100%;
     background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
     border-radius: 2px;
@@ -377,6 +377,7 @@ body {
     font-size: 0.9rem;
     transition: transform 0.5s ease;
     color: #38bdf8;
+    transform: rotate(220deg);
 }
 .wind-center-val {
     position: absolute;
@@ -436,6 +437,20 @@ body {
 .pressure-num { font-size: 1.05rem; font-weight: 600; line-height: 1; }
 .pressure-unit { font-size: 0.6rem; opacity: 0.7; }
 
+.moon-phase-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+.moon-icon-graphic {
+    width: 36px;
+    height: 36px;
+    stroke: #cbd5e1;
+    fill: rgba(203, 213, 225, 0.2);
+    flex-shrink: 0;
+}
+
 .lifestyle-card { grid-column: span 2; }
 .lifestyle-grid {
     display: grid;
@@ -448,7 +463,15 @@ body {
     align-items: center;
     gap: 10px;
 }
-.lifestyle-ico { font-size: 1.25rem; opacity: 0.9; }
+.lifestyle-svg {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    stroke: currentColor;
+    opacity: 0.9;
+    flex-shrink: 0;
+}
 .lifestyle-txt { font-size: 0.81rem; opacity: 0.9; line-height: 1.25; }
 
 .app-footer-credit {
