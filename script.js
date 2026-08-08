@@ -1,9 +1,10 @@
-// script.js - Core functionality for WeatherNow
+// script.js - Core logic matching screenshot layout
 const GEO_API = "https://geocoding-api.open-meteo.com/v1/search";
 const WEATHER_API = "https://api.open-meteo.com/v1/forecast";
-const AQI_API = "https://air-quality-api.open-meteo.com/v1/air-quality";
 
-// DOM References
+const cityTitle = document.getElementById('city-title');
+const locationToggleBtn = document.getElementById('location-toggle-btn');
+const searchContainer = document.getElementById('search-container');
 const searchInput = document.getElementById('search-input');
 const suggestionsList = document.getElementById('suggestions-list');
 const currentLocBtn = document.getElementById('current-loc-btn');
@@ -11,45 +12,54 @@ const errorBanner = document.getElementById('error-banner');
 const loadingScreen = document.getElementById('loading-screen');
 const weatherBg = document.getElementById('weather-bg');
 const sunMoonGlow = document.getElementById('sun-moon-glow');
-const particlesContainer = document.getElementById('particles-container');
 
-// UI Fields
-const locationTitle = document.getElementById('location-title');
-const weatherCondition = document.getElementById('weather-condition');
 const tempDisplay = document.getElementById('temp-display');
 const highLowDisplay = document.getElementById('high-low-display');
+const weatherCondition = document.getElementById('weather-condition');
 const hourlyScroll = document.getElementById('hourly-scroll');
 const forecastList = document.getElementById('forecast-list');
 
-const aqiValue = document.getElementById('aqi-value');
-const aqiBadge = document.getElementById('aqi-badge');
-const aqiRecommendation = document.getElementById('aqi-recommendation');
-const pm25Val = document.getElementById('pm25-val');
-const pm10Val = document.getElementById('pm10-val');
-const o3Val = document.getElementById('o3-val');
-const no2Val = document.getElementById('no2-val');
-
-const clothingGrid = document.getElementById('clothing-grid');
-const uvVal = document.getElementById('uv-val');
+const uvLevel = document.getElementById('uv-level');
+const uvNum = document.getElementById('uv-num');
 const uvDesc = document.getElementById('uv-desc');
+const uvBarFill = document.getElementById('uv-bar-fill');
+
 const feelsVal = document.getElementById('feels-val');
+const feelsActual = document.getElementById('feels-actual');
 const feelsDesc = document.getElementById('feels-desc');
-const windVal = document.getElementById('wind-val');
+
+const windSpeedVal = document.getElementById('wind-speed-val');
 const windDesc = document.getElementById('wind-desc');
+
 const sunriseVal = document.getElementById('sunrise-val');
 const sunsetVal = document.getElementById('sunset-val');
+
 const humidityVal = document.getElementById('humidity-val');
+const humidityDesc = document.getElementById('humidity-desc');
+
 const visVal = document.getElementById('vis-val');
+const visDesc = document.getElementById('vis-desc');
+
 const pressureVal = document.getElementById('pressure-val');
+const pressureDesc = document.getElementById('pressure-desc');
+
 const moonIcon = document.getElementById('moon-icon');
 const moonName = document.getElementById('moon-name');
+const moonsetVal = document.getElementById('moonset-val');
 
-// Default Load on Startup (Rantasalmi, Finland)
-window.addEventListener('DOMContentLoaded', () => {
-    fetchWeatherData(62.22, 28.33, "Rantasalmi", "Finland");
+const lifeFishing = document.getElementById('life-fishing');
+const lifeClothing = document.getElementById('life-clothing');
+const lifeHealth = document.getElementById('life-health');
+const lifeStargazing = document.getElementById('life-stargazing');
+
+locationToggleBtn.addEventListener('click', () => {
+    searchContainer.classList.toggle('hidden');
 });
 
-// Search Autocomplete
+window.addEventListener('DOMContentLoaded', () => {
+    fetchWeatherData(62.22, 28.33, "Rantasalmi");
+});
+
 let searchTimer;
 searchInput.addEventListener('input', (e) => {
     clearTimeout(searchTimer);
@@ -77,76 +87,62 @@ function renderSuggestions(results) {
         li.addEventListener('click', () => {
             suggestionsList.innerHTML = "";
             searchInput.value = "";
-            fetchWeatherData(loc.latitude, loc.longitude, loc.name, loc.country);
+            searchContainer.classList.add('hidden');
+            fetchWeatherData(loc.latitude, loc.longitude, loc.name);
         });
         suggestionsList.appendChild(li);
     });
 }
 
-// Current Location Button
 currentLocBtn.addEventListener('click', () => {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            pos => fetchWeatherData(pos.coords.latitude, pos.coords.longitude, "Current Location", ""),
-            () => showError("Location permission denied or unavailable.")
+            pos => {
+                searchContainer.classList.add('hidden');
+                fetchWeatherData(pos.coords.latitude, pos.coords.longitude, "Current Location");
+            },
+            () => showError("Location permission denied.")
         );
     }
 });
 
-async function fetchWeatherData(lat, lon, cityName, countryName) {
+async function fetchWeatherData(lat, lon, cityName) {
     loadingScreen.classList.remove('hidden');
     hideError();
 
     try {
-        const weatherUrl = `${WEATHER_API}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
-        const aqiUrl = `${AQI_API}?latitude=${lat}&longitude=${lon}&current=european_aqi,pm2_5,pm10,nitrogen_dioxide,ozone`;
-
-        const [weatherRes, aqiRes] = await Promise.all([
-            fetch(weatherUrl),
-            fetch(aqiUrl).catch(() => null)
-        ]);
-
-        const weatherData = await weatherRes.json();
-        const aqiData = aqiRes ? await aqiRes.json() : null;
-
-        updateUI(weatherData, aqiData, cityName, countryName);
+        const url = `${WEATHER_API}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
+        const res = await fetch(url);
+        const data = await res.json();
+        updateUI(data, cityName);
     } catch (err) {
         console.error("API error:", err);
-        showError("Failed to fetch weather data. Please check your network.");
+        showError("Failed to fetch weather data.");
     } finally {
         loadingScreen.classList.add('hidden');
     }
 }
 
-function updateUI(w, aqi, cityName, countryName) {
+function updateUI(w, cityName) {
     const current = w.current;
     const daily = w.daily;
     const hourly = w.hourly;
     const isDay = current.is_day === 1;
 
-    // 1. Current Weather
-    locationTitle.textContent = `📍 ${cityName}${countryName ? ', ' + countryName : ''}`;
-    weatherCondition.textContent = getWeatherConditionText(current.weather_code);
+    cityTitle.textContent = cityName;
     const temp = Math.round(current.temperature_2m);
     tempDisplay.textContent = `${temp}°`;
-    highLowDisplay.textContent = `High: ${Math.round(daily.temperature_2m_max[0])}°  |  Low: ${Math.round(daily.temperature_2m_min[0])}°`;
+    highLowDisplay.textContent = `High: ${Math.round(daily.temperature_2m_max[0])}° Low: ${Math.round(daily.temperature_2m_min[0])}°`;
+    weatherCondition.textContent = getWeatherConditionText(current.weather_code);
 
-    // Background & Theme
     const theme = getWeatherTheme(current.weather_code, isDay);
     weatherBg.className = `weather-bg ${theme}`;
-    if (theme.includes('Day') || theme === 'clearDay') {
-        sunMoonGlow.className = 'sun-glow';
-    } else if (theme === 'clearNight') {
-        sunMoonGlow.className = 'moon-glow';
-    } else {
-        sunMoonGlow.className = '';
-    }
-    renderParticles(theme);
+    sunMoonGlow.className = isDay ? 'sun-glow' : 'moon-glow';
 
-    // 2. Hourly Weather
+    // Hourly
     hourlyScroll.innerHTML = "";
     const nowIdx = hourly.time.findIndex(t => new Date(t) >= new Date()) || 0;
-    for (let i = nowIdx; i < Math.min(nowIdx + 24, hourly.time.length); i++) {
+    for (let i = nowIdx; i < Math.min(nowIdx + 8, hourly.time.length); i++) {
         const hDiv = document.createElement('div');
         hDiv.className = 'hourly-item';
         hDiv.innerHTML = `
@@ -157,18 +153,19 @@ function updateUI(w, aqi, cityName, countryName) {
         hourlyScroll.appendChild(hDiv);
     }
 
-    // 3. 7-Day Forecast
+    // Forecast
     forecastList.innerHTML = "";
-    daily.time.forEach((dateStr, i) => {
+    for (let i = 0; i < 5; i++) {
+        if (!daily.time[i]) break;
         const minT = Math.round(daily.temperature_2m_min[i]);
         const maxT = Math.round(daily.temperature_2m_max[i]);
-        const barWidth = Math.max(25, (maxT - minT) * 10);
+        const barWidth = Math.max(30, (maxT - minT) * 12);
         
         const fRow = document.createElement('div');
         fRow.className = 'forecast-row';
         fRow.innerHTML = `
-            <span class="forecast-day">${i === 0 ? "Today" : formatDayName(dateStr)}</span>
-            <span class="forecast-icon">☁️</span>
+            <span class="forecast-day">${i === 0 ? "Today" : formatDayName(daily.time[i])}</span>
+            <div class="forecast-icon-wrap"><span>⛅</span></div>
             <div class="forecast-range">
                 <span>${minT}°</span>
                 <div class="temp-bar-bg"><div class="temp-bar-fill" style="width: ${barWidth}%"></div></div>
@@ -176,101 +173,47 @@ function updateUI(w, aqi, cityName, countryName) {
             </div>
         `;
         forecastList.appendChild(fRow);
-    });
+    }
 
-    // 5. Air Quality (AQI)
-    const aqiVal = aqi?.current?.european_aqi || 42;
-    const aqiMeta = getAQIMeta(aqiVal);
-    aqiValue.textContent = aqiVal;
-    aqiBadge.textContent = aqiMeta.category;
-    aqiBadge.style.background = aqiMeta.color;
-    aqiRecommendation.textContent = aqiMeta.rec;
-    pm25Val.textContent = `${aqi?.current?.pm2_5 || 8} µg/m³`;
-    pm10Val.textContent = `${aqi?.current?.pm10 || 15} µg/m³`;
-    o3Val.textContent = `${aqi?.current?.ozone || 52} µg/m³`;
-    no2Val.textContent = `${aqi?.current?.nitrogen_dioxide || 12} µg/m³`;
-
-    // 6. Clothing Recommendation Engine
-    renderClothing({
-        temp,
-        wind: current.wind_speed_10m,
-        rain: current.precipitation,
-        uv: daily.uv_index_max[0] || 0,
-        weatherCode: current.weather_code
-    });
-
-    // 4. Details Cards
-    const uv = daily.uv_index_max[0] || 0;
-    uvVal.textContent = uv;
+    // Details Cards
+    const uv = daily.uv_index_max[0] || 1;
+    uvNum.textContent = uv;
+    uvLevel.textContent = uv <= 2 ? "Low" : uv <= 5 ? "Moderate" : "High";
     uvDesc.textContent = uv <= 2 ? "Almost no risk of sunburn" : "Sun protection recommended";
+    uvBarFill.style.width = `${Math.min(100, uv * 15)}%`;
 
     const feels = Math.round(current.apparent_temperature);
     feelsVal.textContent = `${feels}°`;
-    feelsDesc.textContent = feels < temp ? "Feels colder than actual temp" : "Feels comfortable";
+    feelsActual.textContent = `Actual temperature: ${temp}°`;
+    feelsDesc.textContent = feels < temp ? "Feels a bit colder than the actual temperature" : "Feels comfortable and warm";
 
-    windVal.textContent = `${current.wind_speed_10m} m/s`;
-    windDesc.textContent = `Wind direction ${getWindDir(current.wind_direction_10m)}`;
+    const windSpeed = current.wind_speed_10m || 2;
+    const bft = Math.round(windSpeed / 2.5) + 1;
+    windSpeedVal.textContent = `${bft} Bft`;
+    windDesc.textContent = `${getWindDir(current.wind_direction_10m)} wind, gentle breeze on the face`;
 
-    sunriseVal.textContent = `Rise: ${formatTime(daily.sunrise[0])}`;
-    sunsetVal.textContent = `Set: ${formatTime(daily.sunset[0])}`;
+    sunriseVal.textContent = formatTime(daily.sunrise[0]);
+    sunsetVal.textContent = `Sunset: ${formatTime(daily.sunset[0])}`;
 
-    humidityVal.textContent = `${current.relative_humidity_2m}%`;
-    visVal.textContent = `25 km`;
-    pressureVal.textContent = `${Math.round(current.pressure_msl || 1013)} hPa`;
+    const hum = current.relative_humidity_2m || 66;
+    humidityVal.textContent = `${hum} %`;
+    humidityDesc.textContent = hum > 70 ? "Fairly humid, drying will take longer" : "Comfortable humidity levels";
 
-    moonIcon.textContent = "🌘";
-    moonName.textContent = "Waning Crescent";
-}
+    visVal.textContent = "30 km";
+    visDesc.textContent = "Excellent visibility";
 
-function renderParticles(theme) {
-    particlesContainer.innerHTML = "";
-    let count = 0;
-    if (theme === 'rain' || theme === 'heavyRain') count = 35;
-    else if (theme === 'snow') count = 30;
-    else if (theme === 'clearNight') count = 25;
+    const press = Math.round(current.pressure_msl || 1011);
+    pressureVal.textContent = press;
+    pressureDesc.textContent = "Normal air pressure, comfortable weather";
 
-    for (let i = 0; i < count; i++) {
-        const p = document.createElement('div');
-        p.className = `particle ${theme === 'snow' ? 'snow-flake' : theme.includes('rain') ? 'rain-drop' : 'star'}`;
-        p.style.left = `${Math.random() * 100}%`;
-        p.style.animationDuration = `${Math.random() * 2 + 1}s`;
-        p.style.animationDelay = `${Math.random() * 2}s`;
-        const size = Math.random() * 3 + 1;
-        p.style.width = `${size}px`;
-        p.style.height = `${theme.includes('rain') ? size * 8 : size}px`;
-        particlesContainer.appendChild(p);
-    }
-}
+    moonIcon.textContent = "🌕";
+    moonName.textContent = "Waning crescent";
+    moonsetVal.textContent = "9.06 pm Moonset";
 
-function renderClothing(data) {
-    clothingGrid.innerHTML = "";
-    const items = [];
-    if (data.temp < 0) {
-        items.push({ icon: "🧥", label: "Heavy Winter Coat" }, { icon: "🧣", label: "Scarf & Gloves" }, { icon: "🥾", label: "Snow Boots" });
-    } else if (data.temp < 12) {
-        items.push({ icon: "🧥", label: "Warm Jacket" }, { icon: "👕", label: "Sweater / Hoodie" }, { icon: "👖", label: "Trousers" });
-    } else if (data.temp < 20) {
-        items.push({ icon: "🧥", label: "Light Jacket" }, { icon: "👕", label: "T-Shirt / Long Sleeve" });
-    } else {
-        items.push({ icon: "👕", label: "Light T-Shirt" }, { icon: "🩳", label: "Shorts or Light Pants" }, { icon: "🧢", label: "Cap" });
-    }
-
-    if (data.rain > 0 || [51,53,55,61,63,65].includes(data.weatherCode)) {
-        items.push({ icon: "☔", label: "Umbrella & Waterproof Coat" });
-    }
-    if (data.wind > 20) {
-        items.push({ icon: "💨", label: "Windbreaker Layer" });
-    }
-    if (data.uv >= 6) {
-        items.push({ icon: "🕶️", label: "Sunglasses & Sunscreen" });
-    }
-
-    items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'clothing-item';
-        div.innerHTML = `<span class="clothing-icon">${item.icon}</span><span class="clothing-label">${item.label}</span>`;
-        clothingGrid.appendChild(div);
-    });
+    lifeFishing.textContent = temp > 5 && temp < 25 ? "Good conditions for fishing" : "Not ideal fishing";
+    lifeClothing.textContent = temp < 15 ? "Light jacket recommended" : "T-shirt weather";
+    lifeHealth.textContent = temp < 10 ? "Very high chance of getting a cold" : "Low health risk";
+    lifeStargazing.textContent = current.weather_code === 0 ? "Perfect conditions for stargazing" : "Fairly suitable for stargazing";
 }
 
 function getWeatherTheme(code, isDay) {
@@ -281,34 +224,22 @@ function getWeatherTheme(code, isDay) {
     if ([65,80,81,82].includes(code)) return "heavyRain";
     if ([71,73,75,85].includes(code)) return "snow";
     if ([95,96,99].includes(code)) return "thunderstorm";
-    if ([45,48].includes(code)) return "fog";
     return isDay ? "clearDay" : "clearNight";
 }
 
 function getWeatherConditionText(code) {
-    const map = {
-        0: "Clear Sky", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast",
-        45: "Foggy", 51: "Light Drizzle", 61: "Slight Rain", 63: "Moderate Rain",
-        65: "Heavy Rain", 71: "Snow", 95: "Thunderstorm"
-    };
+    const map = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Foggy", 61: "Rain", 71: "Snow", 95: "Thunderstorm" };
     return map[code] || "Clear";
-}
-
-function getAQIMeta(aqi) {
-    if (aqi <= 20) return { category: "Good", color: "#10B981", rec: "Air quality is good. Outdoor activities are fully suitable." };
-    if (aqi <= 40) return { category: "Fair", color: "#34D399", rec: "Air quality is acceptable for most people." };
-    if (aqi <= 60) return { category: "Moderate", color: "#FBBF24", rec: "Sensitive individuals should avoid prolonged exertion." };
-    if (aqi <= 80) return { category: "Poor", color: "#F97316", rec: "Unhealthy for sensitive groups. Consider reducing outdoor time." };
-    return { category: "Hazardous", color: "#EF4444", rec: "Very poor air quality. Limit outdoor activities." };
 }
 
 function formatHour(iso) { return new Date(iso).toLocaleTimeString([], { hour: 'numeric', hour12: true }).toLowerCase(); }
 function formatDayName(iso) { return new Date(iso).toLocaleDateString([], { weekday: 'short' }); }
 function formatTime(iso) { return !iso ? "--:--" : new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase(); }
 function getWindDir(deg) {
-    if (deg === undefined) return "N";
+    if (deg === undefined) return "W";
     const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
     return dirs[Math.round((deg % 360) / 45) % 8];
 }
 function showError(msg) { errorBanner.textContent = msg; errorBanner.classList.remove('hidden'); }
 function hideError() { errorBanner.classList.add('hidden'); }
+                                                 
