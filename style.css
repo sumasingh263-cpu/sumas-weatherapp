@@ -252,7 +252,7 @@ body {
 
 .hourly-scroll {
     display: flex;
-    gap: 18px;
+    gap: 16px;
     overflow-x: auto;
     padding-bottom: 4px;
     scrollbar-width: none;
@@ -263,12 +263,19 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 44px;
-    gap: 8px;
+    min-width: 52px;
+    gap: 4px;
 }
 .hour-time { font-size: 0.78rem; opacity: 0.75; }
-.hour-icon svg { width: 22px; height: 22px; opacity: 0.9; stroke: white; }
-.hour-temp { font-size: 0.95rem; font-weight: 500; }
+.hour-icon-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.hour-icon-wrap svg { width: 22px; height: 22px; opacity: 0.9; stroke: white; }
+.hour-pop { font-size: 0.68rem; color: #38bdf8; font-weight: 500; min-height: 12px; }
+.hour-temp { font-size: 0.95rem; font-weight: 500; margin-top: 2px; }
 
 .forecast-list {
     display: flex;
@@ -282,8 +289,15 @@ body {
     font-size: 0.9rem;
 }
 .forecast-day { width: 50px; font-weight: 400; opacity: 0.9; }
-.forecast-icon-wrap { display: flex; align-items: center; gap: 4px; }
+.forecast-icon-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 45px;
+}
 .forecast-icon-wrap svg { width: 20px; height: 20px; opacity: 0.9; stroke: white; }
+.forecast-pop { font-size: 0.68rem; color: #38bdf8; font-weight: 500; min-height: 12px; }
 .forecast-range {
     display: flex;
     align-items: center;
