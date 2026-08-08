@@ -203,20 +203,26 @@ async function fetchWeatherData(lat, lon, cityName) {
 
     try {
         const weatherUrl = `${WEATHER_API}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
-        const aqiUrl = `${AIR_QUALITY_API}?latitude=${lat}&longitude=${lon}&current=european_aqi,pm2_5`;
-
-        const [weatherRes, aqiRes] = await Promise.all([
-            fetch(weatherUrl),
-            fetch(aqiUrl).catch(() => null)
-        ]);
-
+        
+        const weatherRes = await fetch(weatherUrl);
+        if (!weatherRes.ok) throw new Error("Weather request failed");
         const data = await weatherRes.json();
-        let aqiData = aqiRes ? await aqiRes.json().catch(() => null) : null;
+
+        let aqiData = null;
+        try {
+            const aqiUrl = `${AIR_QUALITY_API}?latitude=${lat}&longitude=${lon}&current=european_aqi,pm2_5`;
+            const aqiRes = await fetch(aqiUrl);
+            if (aqiRes.ok) {
+                aqiData = await aqiRes.json();
+            }
+        } catch (aqiErr) {
+            console.warn("Air Quality API blocked or unavailable:", aqiErr);
+        }
 
         updateUI(data, aqiData, cityName);
     } catch (err) {
         console.error("API error:", err);
-        showError("Failed to fetch advanced weather data.");
+        showError("Failed to fetch weather data. Check connection or ad-blocker.");
     } finally {
         loadingScreen.classList.add('hidden');
     }
@@ -300,7 +306,7 @@ function updateUI(w, aqi, cityName) {
         forecastList.appendChild(fRow);
     }
 
-    // Air Quality Index (AQI)
+    // Air Quality Index (AQI) Fallback handling
     if (aqi && aqi.current) {
         const euAqi = aqi.current.european_aqi || 20;
         aqiNum.textContent = `EU AQI: ${euAqi}`;
@@ -318,6 +324,10 @@ function updateUI(w, aqi, cityName) {
             aqiBarFill.style.background = "#f97316";
         }
         aqiBarFill.style.width = `${Math.min(100, euAqi)}%`;
+    } else {
+        aqiVal.textContent = "Unavailable";
+        aqiNum.textContent = "EU AQI: --";
+        aqiDesc.textContent = "Data blocked or offline.";
     }
 
     // UV Index Accurate Data
