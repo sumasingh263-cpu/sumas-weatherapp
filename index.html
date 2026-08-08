@@ -3,136 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeatherNow - Advanced Weather Dashboard</title>
+    <title>WeatherApp - Live Weather Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Animated Background & Atmospheric Glow -->
-    <div id="weather-bg" class="weather-bg clearDay">
-        <div id="sun-moon-glow"></div>
+    <div id="weather-bg" class="weather-bg clearNight">
+        <div id="sun-moon-glow" class="moon-glow"></div>
         <div id="particles-container"></div>
     </div>
 
     <div class="app-container">
-        <!-- Header & Location Search -->
+        <!-- Top Header Navigation -->
         <header class="app-header">
-            <button id="current-loc-btn" class="icon-btn" title="Use Current Location">📍</button>
-            <div class="search-wrapper">
-                <input type="text" id="search-input" placeholder="Search city name (e.g. Helsinki, London)..." autocomplete="off">
-                <ul id="suggestions-list" class="suggestions-dropdown"></ul>
+            <button class="top-icon-btn" id="menu-btn">☰</button>
+            <div class="location-header-wrap" id="location-toggle-btn" title="Click to search location">
+                <span id="city-title">Rantasalmi</span>
+                <div class="location-dot-indicator"></div>
             </div>
+            <button class="top-icon-btn" id="options-btn">⋮</button>
         </header>
+
+        <!-- Hidden Search Overlay (Toggled by clicking location header) -->
+        <div id="search-container" class="search-container hidden">
+            <input type="text" id="search-input" placeholder="Search city name (e.g. Helsinki)..." autocomplete="off">
+            <button id="current-loc-btn" class="geo-btn">📍 Use Current Location</button>
+            <ul id="suggestions-list" class="suggestions-dropdown"></ul>
+        </div>
 
         <!-- Error & Loading States -->
         <div id="error-banner" class="error-banner hidden"></div>
         <div id="loading-screen" class="loading-screen hidden">
             <div class="spinner"></div>
-            <p>Loading WeatherNow dashboard...</p>
+            <p>Loading weather details...</p>
         </div>
 
-        <!-- Main Dashboard Content -->
-        <main id="dashboard-content" class="dashboard-content">
+        <!-- Main Dashboard Screen -->
+        <main class="dashboard-main">
             
-            <!-- A. Current Weather -->
-            <section class="glass-card current-card">
-                <h1 id="location-title">📍 Loading...</h1>
-                <div id="weather-condition" class="condition-text">--</div>
-                <div id="temp-display" class="temp-display">0°</div>
-                <div id="high-low-display" class="high-low-row">High: 0° | Low: 0°</div>
+            <!-- Current Weather -->
+            <section class="current-weather-section">
+                <div id="temp-display" class="main-temp">16°</div>
+                <div id="high-low-display" class="main-high-low">High: 18° Low: 13°</div>
+                <div id="weather-condition" class="main-condition">Clear</div>
             </section>
 
-            <!-- B. Hourly Weather -->
-            <section class="glass-card hourly-section">
-                <h3 class="section-title">🕒 Hourly Weather</h3>
+            <!-- Hourly Weather -->
+            <section class="glass-card hourly-card">
+                <div class="card-section-title">
+                    <span class="card-icon">🕒</span> Hourly weather
+                </div>
                 <div id="hourly-scroll" class="hourly-scroll">
-                    <!-- Dynamically populated -->
+                    <!-- Populated dynamically -->
                 </div>
             </section>
 
-            <!-- C. 7-Day Forecast -->
-            <section class="glass-card forecast-section">
-                <h3 class="section-title">📅 7-Day Forecast</h3>
+            <!-- Weather Forecast -->
+            <section class="glass-card forecast-card">
+                <div class="forecast-header-row">
+                    <div class="card-section-title">
+                        <span class="card-icon">📅</span> Weather forecast
+                    </div>
+                    <div class="forecast-toggles">
+                        <span class="toggle-icon active">☰</span>
+                        <span class="toggle-icon">📈</span>
+                    </div>
+                </div>
                 <div id="forecast-list" class="forecast-list">
-                    <!-- Dynamically populated -->
+                    <!-- Populated dynamically -->
                 </div>
+                <button class="extended-btn">Extended forecast</button>
             </section>
 
-            <!-- D. Air Quality (AQI) -->
-            <section class="glass-card aqi-section">
-                <h3 class="section-title">🍃 Air Quality (AQI)</h3>
-                <div class="aqi-flex">
-                    <div id="aqi-value" class="aqi-val">--</div>
-                    <div id="aqi-badge" class="aqi-badge">Good</div>
-                </div>
-                <p id="aqi-recommendation" class="aqi-rec">Loading air quality...</p>
-                <div class="pollutants-grid">
-                    <div>PM2.5: <span id="pm25-val">--</span></div>
-                    <div>PM10: <span id="pm10-val">--</span></div>
-                    <div>O₃: <span id="o3-val">--</span></div>
-                    <div>NO₂: <span id="no2-val">--</span></div>
-                </div>
-            </section>
-
-            <!-- E. Smart "What to Wear" Recommendation -->
-            <section class="glass-card clothing-section">
-                <h3 class="section-title">🧥 What to Wear Today</h3>
-                <div id="clothing-grid" class="clothing-grid">
-                    <!-- Dynamically populated -->
-                </div>
-            </section>
-
-            <!-- F. Detailed Weather Metrics Grid -->
+            <!-- Details Grid -->
             <div class="details-grid">
+                <!-- UV Index -->
                 <div class="glass-card detail-card">
-                    <h4>☀️ UV Index</h4>
-                    <div id="uv-val" class="detail-val">--</div>
-                    <p id="uv-desc">--</p>
+                    <div class="card-section-title"><span class="card-icon">☀️</span> UV index</div>
+                    <div id="uv-level" class="detail-big-text">Low</div>
+                    <div id="uv-num" class="detail-sub-num">1</div>
+                    <div class="uv-bar-container">
+                        <div class="uv-bar-fill" id="uv-bar-fill"></div>
+                    </div>
+                    <p id="uv-desc" class="detail-desc">Almost no risk of sunburn</p>
                 </div>
 
+                <!-- Feels Like -->
                 <div class="glass-card detail-card">
-                    <h4>🌡️ Feels Like</h4>
-                    <div id="feels-val" class="detail-val">--</div>
-                    <p id="feels-desc">--</p>
+                    <div class="card-section-title"><span class="card-icon">🌡️</span> Feels like</div>
+                    <div id="feels-val" class="detail-big-text">13°</div>
+                    <p id="feels-actual" class="detail-sub-text">Actual temperature: 16°</p>
+                    <p id="feels-desc" class="detail-desc">Feels a bit colder than the actual temperature</p>
                 </div>
 
+                <!-- Wind -->
                 <div class="glass-card detail-card">
-                    <h4>💨 Wind</h4>
-                    <div id="wind-val" class="detail-val">--</div>
-                    <p id="wind-desc">--</p>
+                    <div class="card-section-title"><span class="card-icon">💨</span> Wind</div>
+                    <div class="wind-graphic-wrap">
+                        <div class="wind-compass">
+                            <span class="comp-n">N</span><span class="comp-e">E</span><span class="comp-s">S</span><span class="comp-w">W</span>
+                            <div id="wind-needle" class="wind-needle">➔</div>
+                            <div class="wind-center-val" id="wind-speed-val">2 Bft</div>
+                        </div>
+                    </div>
+                    <p id="wind-desc" class="detail-desc">W wind, gentle breeze on the face</p>
                 </div>
 
+                <!-- Sunrise / Sunset -->
                 <div class="glass-card detail-card">
-                    <h4>🌅 Sunrise / Sunset</h4>
-                    <div id="sunrise-val" class="detail-sub">Rise: --</div>
-                    <div id="sunset-val" class="detail-sub">Set: --</div>
+                    <div class="card-section-title"><span class="card-icon">🌅</span> Sunrise</div>
+                    <div id="sunrise-val" class="sunrise-big-time">4.52 am</div>
+                    <div class="sun-curve-graphic"></div>
+                    <p id="sunset-val" class="detail-sub-text" style="margin-top: 10px;">Sunset: 9.36 pm</p>
                 </div>
 
+                <!-- Humidity -->
                 <div class="glass-card detail-card">
-                    <h4>💧 Humidity</h4>
-                    <div id="humidity-val" class="detail-val">--</div>
-                    <p>Moisture level in air</p>
+                    <div class="card-section-title"><span class="card-icon">💧</span> Humidity</div>
+                    <div id="humidity-val" class="detail-big-text">66 %</div>
+                    <p id="humidity-desc" class="detail-desc" style="margin-top: 22px;">Fairly humid, drying will take longer</p>
                 </div>
 
+                <!-- Visibility -->
                 <div class="glass-card detail-card">
-                    <h4>👁️ Visibility</h4>
-                    <div id="vis-val" class="detail-val">--</div>
-                    <p>Distance clarity</p>
+                    <div class="card-section-title"><span class="card-icon">👁️</span> Visibility</div>
+                    <div id="vis-val" class="detail-big-text">30 km</div>
+                    <div class="vis-labels"><span style="font-size:0.75rem; opacity:0.7">Low</span><span style="font-size:0.75rem; opacity:0.7">High</span></div>
+                    <div class="vis-slider-track"><div class="vis-slider-thumb" style="left: 85%;"></div></div>
+                    <p id="vis-desc" class="detail-desc" style="margin-top: 10px;">Excellent visibility</p>
                 </div>
 
+                <!-- Pressure -->
                 <div class="glass-card detail-card">
-                    <h4>⏱️ Pressure</h4>
-                    <div id="pressure-val" class="detail-val">--</div>
-                    <p>Atmospheric pressure</p>
+                    <div class="card-section-title"><span class="card-icon">⏱️</span> Pressure</div>
+                    <div class="pressure-gauge-wrap">
+                        <div class="pressure-dial">
+                            <span id="pressure-val" class="pressure-num">1011</span>
+                            <span class="pressure-unit">hPa</span>
+                        </div>
+                    </div>
+                    <p id="pressure-desc" class="detail-desc">Normal air pressure, comfortable weather</p>
                 </div>
 
+                <!-- Moon Phase -->
                 <div class="glass-card detail-card">
-                    <h4>🌙 Moon Phase</h4>
-                    <div id="moon-icon" class="detail-val">🌕</div>
-                    <p id="moon-name">--</p>
+                    <div class="card-section-title"><span class="card-icon">🌙</span> Moon phase</div>
+                    <div class="moon-display-wrap">
+                        <div id="moon-icon" class="moon-icon-graphic">🌕</div>
+                    </div>
+                    <p id="moon-name" class="detail-sub-text" style="font-weight:500;">Waning crescent</p>
+                    <p id="moonset-val" class="detail-desc">9.06 pm Moonset</p>
                 </div>
             </div>
 
+            <!-- Lifestyle Section -->
+            <section class="glass-card lifestyle-card">
+                <div class="card-section-title"><span class="card-icon">💡</span> Lifestyle</div>
+                <div class="lifestyle-grid">
+                    <div class="lifestyle-item">
+                        <span class="lifestyle-ico">🎣</span>
+                        <span id="life-fishing" class="lifestyle-txt">Not ideal fishing</span>
+                    </div>
+                    <div class="lifestyle-item">
+                        <span class="lifestyle-ico">🧥</span>
+                        <span id="life-clothing" class="lifestyle-txt">Light jacket recommended</span>
+                    </div>
+                    <div class="lifestyle-item">
+                        <span class="lifestyle-ico">💊</span>
+                        <span id="life-health" class="lifestyle-txt">Very high chance of getting a cold</span>
+                    </div>
+                    <div class="lifestyle-item">
+                        <span class="lifestyle-ico">🔭</span>
+                        <span id="life-stargazing" class="lifestyle-txt">Fairly suitable for stargazing</span>
+                    </div>
+                </div>
+            </section>
+
         </main>
+
+        <!-- Footer -->
+        <footer class="app-footer-credit">
+            <p>Powered by Project Possible</p>
+            <p style="font-size: 0.72rem; opacity: 0.45; margin-top: 4px;">Weather version: 18.1.2.356</p>
+        </footer>
     </div>
 
     <script src="script.js"></script>
