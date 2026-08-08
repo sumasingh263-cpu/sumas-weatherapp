@@ -69,10 +69,18 @@ body {
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 12px;
     color: #ffffff;
-    font-size: 1.1rem;
     cursor: pointer;
-    padding: 8px 10px;
+    padding: 8px;
     backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.top-icon-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    opacity: 0.9;
 }
 
 .location-header-wrap {
@@ -218,7 +226,13 @@ body {
     letter-spacing: 0.2px;
 }
 
-.card-icon { font-size: 0.85rem; opacity: 0.9; }
+.card-icon {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    opacity: 0.85;
+    vertical-align: middle;
+}
 
 .forecast-header-row {
     display: flex;
