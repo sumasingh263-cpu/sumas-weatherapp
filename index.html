@@ -69,6 +69,7 @@
 
         </div>
 
+
     </header>
 
 
@@ -147,6 +148,7 @@
 
         <!-- HOURLY WEATHER -->
         <section class="glass-card hourly-card" data-section-id="hourly">
+
 
             <div class="card-section-title">
 
@@ -233,21 +235,6 @@
                     Loading forecast…
                 </div>
             </div>
-
-
-            <button
-                class="geo-btn extended-btn"
-                id="extended-forecast-btn"
-            >
-                Extended forecast
-            </button>
-
-        </section>
-
-
-        <!-- DETAILS -->
-        <div class="details-grid" data-section-id="details">
-
 
             <!-- UV -->
             <div class="glass-card detail-card" data-detail-id="uv">
@@ -342,6 +329,18 @@
             </div>
 
 
+            <button
+                class="geo-btn extended-btn"
+                id="extended-forecast-btn"
+            >
+                Extended forecast
+            </button>
+
+        </section>
+
+
+        <!-- DETAILS -->
+        <div class="details-grid" data-section-id="details">
             <!-- WIND -->
             <div class="glass-card detail-card" data-detail-id="wind">
 
@@ -495,6 +494,7 @@
                 </div>
 
             </div>
+
 
 
             <!-- VISIBILITY -->
@@ -744,8 +744,7 @@
                     <span class="settings-row-label">Detailed</span>
                     <input type="radio" name="widget-style" id="widget-style-detailed" value="detailed">
                 </label>
-
-                <div class="settings-subgroup-label">Information shown</div>
+<div class="settings-subgroup-label">Information shown</div>
 
                 <label class="settings-row toggle-row">
                     <span class="settings-row-label">Temperature</span>
@@ -801,7 +800,7 @@
 
         </div>
     </div>
-<!-- ===================== TEMPERATURE UNIT PANEL ===================== -->
+    <!-- ===================== TEMPERATURE UNIT PANEL ===================== -->
     <div id="tempunit-panel-overlay" class="panel-overlay">
         <div class="panel-sheet panel-sheet-compact" role="dialog" aria-modal="true" aria-labelledby="tempunit-panel-title">
 
@@ -863,9 +862,7 @@
 
         </div>
     </div>
-
-
-    <!-- ===================== RESET TO DEFAULT ORDER CONFIRM ===================== -->
+<!-- ===================== RESET TO DEFAULT ORDER CONFIRM ===================== -->
     <div id="reset-order-confirm-overlay" class="panel-overlay confirm-overlay">
         <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="reset-order-title">
             <div class="confirm-title" id="reset-order-title">Reset to default order?</div>
@@ -890,7 +887,8 @@
         </div>
     </div>
 
-<!-- ===================== SETTINGS PANEL ===================== -->
+
+    <!-- ===================== SETTINGS PANEL ===================== -->
     <div id="settings-panel-overlay" class="panel-overlay">
         <div class="panel-sheet panel-sheet-tall" role="dialog" aria-modal="true" aria-labelledby="settings-panel-title">
 
@@ -909,7 +907,10 @@
                     <input type="radio" name="settings-tempunit" id="settings-tempunit-c" value="C">
                 </label>
                 <label class="settings-row radio-row">
-                    <span class="settings-row-label">Fahrenheit</span>
+                    <span class="settings-row-label">
+
+
+Fahrenheit</span>
                     <input type="radio" name="settings-tempunit" id="settings-tempunit-f" value="F">
                 </label>
 
