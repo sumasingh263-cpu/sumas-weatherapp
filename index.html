@@ -747,4 +747,323 @@
 
                 <div class="settings-subgroup-label">Information shown</div>
 
-                <label class="settings-row
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Temperature</span>
+                    <input type="checkbox" id="widget-show-temp" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Weather condition</span>
+                    <input type="checkbox" id="widget-show-condition" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Weather icon</span>
+                    <input type="checkbox" id="widget-show-icon" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Location</span>
+                    <input type="checkbox" id="widget-show-location" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">High / Low</span>
+                    <input type="checkbox" id="widget-show-highlow" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Precipitation probability</span>
+                    <input type="checkbox" id="widget-show-precip" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Wind</span>
+                    <input type="checkbox" id="widget-show-wind" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Humidity</span>
+                    <input type="checkbox" id="widget-show-humidity" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Feels like</span>
+                    <input type="checkbox" id="widget-show-feelslike" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+
+                <div class="settings-subgroup-label">Preview</div>
+
+                <div id="widget-preview" class="widget-preview"></div>
+
+            </div>
+
+        </div>
+    </div>
+<!-- ===================== TEMPERATURE UNIT PANEL ===================== -->
+    <div id="tempunit-panel-overlay" class="panel-overlay">
+        <div class="panel-sheet panel-sheet-compact" role="dialog" aria-modal="true" aria-labelledby="tempunit-panel-title">
+
+            <div class="panel-header">
+                <span class="panel-title" id="tempunit-panel-title">Temperature unit</span>
+                <button class="panel-close-btn" id="tempunit-panel-close" aria-label="Close">×</button>
+            </div>
+
+            <div class="panel-body">
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Celsius (°C)</span>
+                    <input type="radio" name="tempunit" id="tempunit-c" value="C">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Fahrenheit (°F)</span>
+                    <input type="radio" name="tempunit" id="tempunit-f" value="F">
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ===================== UPDATE FREQUENCY PANEL ===================== -->
+    <div id="frequency-panel-overlay" class="panel-overlay">
+        <div class="panel-sheet panel-sheet-compact" role="dialog" aria-modal="true" aria-labelledby="frequency-panel-title">
+
+            <div class="panel-header">
+                <span class="panel-title" id="frequency-panel-title">Update frequency</span>
+                <button class="panel-close-btn" id="frequency-panel-close" aria-label="Close">×</button>
+            </div>
+
+            <div class="panel-body">
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Automatic</span>
+                    <input type="radio" name="freq" id="freq-auto" value="auto">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Every 15 minutes</span>
+                    <input type="radio" name="freq" id="freq-15" value="15">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Every 30 minutes</span>
+                    <input type="radio" name="freq" id="freq-30" value="30">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Every 1 hour</span>
+                    <input type="radio" name="freq" id="freq-60" value="60">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Every 3 hours</span>
+                    <input type="radio" name="freq" id="freq-180" value="180">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Manual</span>
+                    <input type="radio" name="freq" id="freq-manual" value="manual">
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ===================== RESET TO DEFAULT ORDER CONFIRM ===================== -->
+    <div id="reset-order-confirm-overlay" class="panel-overlay confirm-overlay">
+        <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="reset-order-title">
+            <div class="confirm-title" id="reset-order-title">Reset to default order?</div>
+            <div class="confirm-body">Restore the weather dashboard to its original section order?</div>
+            <div class="confirm-actions">
+                <button class="confirm-btn confirm-btn-secondary" id="reset-order-cancel-btn">Cancel</button>
+                <button class="confirm-btn confirm-btn-danger" id="reset-order-confirm-btn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ===================== RESET APP DATA CONFIRM ===================== -->
+    <div id="reset-data-confirm-overlay" class="panel-overlay confirm-overlay">
+        <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="reset-data-title">
+            <div class="confirm-title" id="reset-data-title">Reset app data?</div>
+            <div class="confirm-body">This clears all your settings and cached weather data and restores the app to its default state. This cannot be undone.</div>
+            <div class="confirm-actions">
+                <button class="confirm-btn confirm-btn-secondary" id="reset-data-cancel-btn">Cancel</button>
+                <button class="confirm-btn confirm-btn-danger" id="reset-data-confirm-btn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+<!-- ===================== SETTINGS PANEL ===================== -->
+    <div id="settings-panel-overlay" class="panel-overlay">
+        <div class="panel-sheet panel-sheet-tall" role="dialog" aria-modal="true" aria-labelledby="settings-panel-title">
+
+            <div class="panel-header">
+                <span class="panel-title" id="settings-panel-title">Settings</span>
+                <button class="panel-close-btn" id="settings-panel-close" aria-label="Close">×</button>
+            </div>
+
+            <div class="panel-body">
+
+                <div class="settings-section-title">General</div>
+
+                <div class="settings-subgroup-label">Temperature unit</div>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Celsius</span>
+                    <input type="radio" name="settings-tempunit" id="settings-tempunit-c" value="C">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Fahrenheit</span>
+                    <input type="radio" name="settings-tempunit" id="settings-tempunit-f" value="F">
+                </label>
+
+                <div class="settings-subgroup-label">Language</div>
+                <div class="settings-row">
+                    <select id="setting-language" class="settings-select">
+                        <option value="en">English</option>
+                    </select>
+                </div>
+
+                <div class="settings-subgroup-label">Start location</div>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Current location</span>
+                    <input type="radio" name="start-location" id="start-location-current" value="current">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Last searched location</span>
+                    <input type="radio" name="start-location" id="start-location-last" value="lastSearched">
+                </label>
+
+                <div class="settings-section-title">Appearance</div>
+
+                <div class="settings-subgroup-label">Theme</div>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">System default</span>
+                    <input type="radio" name="theme" id="theme-system" value="system">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Light</span>
+                    <input type="radio" name="theme" id="theme-light" value="light">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Dark</span>
+                    <input type="radio" name="theme" id="theme-dark" value="dark">
+                </label>
+
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Weather animation</span>
+                    <input type="checkbox" id="setting-weather-animation" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Animated weather background</span>
+                    <input type="checkbox" id="setting-animated-background" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Reduce animations</span>
+                    <input type="checkbox" id="setting-reduce-animations" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+
+                <div class="settings-section-title">Weather information</div>
+
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show hourly forecast</span>
+                    <input type="checkbox" id="setting-info-hourly" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show daily forecast</span>
+                    <input type="checkbox" id="setting-info-daily" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show precipitation probability</span>
+                    <input type="checkbox" id="setting-info-precipitation" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show wind</span>
+                    <input type="checkbox" id="setting-info-wind" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show humidity</span>
+                    <input type="checkbox" id="setting-info-humidity" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show UV index</span>
+                    <input type="checkbox" id="setting-info-uv" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show feels like</span>
+                    <input type="checkbox" id="setting-info-feelslike" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show visibility</span>
+                    <input type="checkbox" id="setting-info-visibility" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show pressure</span>
+                    <input type="checkbox" id="setting-info-pressure" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row disabled-row" id="setting-info-aqi-row" title="Air quality data is not available in this app yet">
+                    <span class="settings-row-label">Show AQI / Air quality <span class="row-note">Not available yet</span></span>
+                    <input type="checkbox" id="setting-info-aqi" class="toggle-input" disabled>
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+
+                <div class="settings-section-title">Notifications</div>
+
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Weather alerts</span>
+                    <input type="checkbox" id="setting-notif-weather" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Rain alerts</span>
+                    <input type="checkbox" id="setting-notif-rain" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Severe weather alerts</span>
+                    <input type="checkbox" id="setting-notif-severe" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Daily weather summary</span>
+                    <input type="checkbox" id="setting-notif-daily-summary" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+
+                <div class="settings-section-title">Location</div>
+
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Use current location</span>
+                    <input type="checkbox" id="setting-loc-use-current" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Remember last searched location</span>
+                    <input type="checkbox" id="setting-loc-remember-last" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+
+                <div class="settings-section-title">Data</div>
+
+                <button class="settings-action-btn" id="clear-cache-btn">Clear cached weather data</button>
+                <button class="settings-action-btn settings-action-btn-danger" id="reset-app-data-btn">Reset app data</button>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
