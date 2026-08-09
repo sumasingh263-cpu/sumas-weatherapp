@@ -1,4 +1,4 @@
-// Default coordinates for Kathmandu / Fallback
+// coordinates for Kathmandu / Fallback
 let currentLat = 27.7172;
 let currentLon = 85.3240;
 let currentCityName = "Kathmandu";
@@ -275,7 +275,6 @@ async function fetchWeatherData(lat, lon, cityName) {
         showErrorBanner("Failed to load weather data. Please try again.");
     }
 }
-
 // Renders every part of the dashboard from a weather-data payload. Used both
 // after a fresh fetch and after a settings change (unit, toggles) so we
 // never need a second fetch just to re-render. Does not touch the animated
@@ -591,6 +590,7 @@ function setUpdateFrequency(freq) {
     applyUpdateFrequency();
 }
 
+
 /* =========================================================================
    THEME
    ========================================================================= */
@@ -669,7 +669,7 @@ function applyWeatherVisuals() {
     const category = classifyWeatherCode(code);
 
     // Background
-const bgEl = document.getElementById("weather-bg");
+    const bgEl = document.getElementById("weather-bg");
     if (bgEl) {
         if (appSettings.appearance.animatedBackground) {
             const variant = WEATHER_BACKGROUNDS[category] || WEATHER_BACKGROUNDS.clear;
@@ -772,9 +772,6 @@ function updateWeatherWidgetPreview(data, cityName) {
 
     preview.innerHTML = visibleParts.join("") || `<div class="row-note">Nothing selected to show</div>`;
 }
-
-
-
 /* =========================================================================
    THREE-DOT MENU + PANELS + SETTINGS PAGE
    Wiring is attached exactly once from initSettingsUI() (called once from
@@ -917,7 +914,18 @@ function wireMenu() {
         openPanel("settings-panel-overlay");
     });
 }
-// Escape closes whichever panel is currently open — single listener.
+
+function wirePanels() {
+    // Clicking the dim backdrop (not the sheet/dialog itself) closes a panel.
+    ALL_PANEL_IDS.forEach((id) => {
+        const overlay = document.getElementById(id);
+        if (!overlay) return;
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) closePanel(id);
+        });
+    });
+
+    // Escape closes whichever panel is currently open — single listener.
     document.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
         ALL_PANEL_IDS.forEach((id) => {
@@ -993,6 +1001,7 @@ function wireSettingsPanel() {
         appSettings.general.startLocation = "lastSearched";
         saveSettings();
     });
+
 
     // Appearance
     wireRadioListener("theme-system", () => setTheme("system"));
@@ -1075,7 +1084,6 @@ function wireConfirmDialogs() {
         });
     }
 }
-
 // Sets every control's displayed value from appSettings, without attaching
 // any listeners. Safe to call repeatedly (e.g. after a data reset).
 function populateSettingsControls() {
@@ -1174,13 +1182,3 @@ function resetAppData() {
     applyUpdateFrequency();
     fetchWeatherData(currentLat, currentLon, currentCityName);
 }
-function wirePanels() {
-    // Clicking the dim backdrop (not the sheet/dialog itself) closes a panel.
-    ALL_PANEL_IDS.forEach((id) => {
-        const overlay = document.getElementById(id);
-        if (!overlay) return;
-        overlay.addEventListener("click", (e) => {
-            if (e.target === overlay) closePanel(id);
-        });
-    });
-
