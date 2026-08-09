@@ -18,8 +18,11 @@
     <!-- HEADER -->
     <header class="app-header">
 
-        <button class="header-action-btn" id="cancel-btn">
-            Cancel
+        <button
+            class="header-action-btn primary"
+            id="add-fav-btn"
+        >
+            Add
         </button>
 
         <div
@@ -30,12 +33,41 @@
             <span id="city-title">Kathmandu</span>
         </div>
 
-        <button
-            class="header-action-btn primary"
-            id="add-fav-btn"
-        >
-            Add
-        </button>
+        <div class="menu-wrap">
+
+            <button
+                class="header-action-btn menu-btn"
+                id="menu-btn"
+                aria-label="More options"
+                aria-haspopup="true"
+                aria-expanded="false"
+            >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="5" cy="12" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="19" cy="12" r="2"/>
+                </svg>
+            </button>
+
+            <!-- OVERFLOW MENU -->
+            <div
+                id="overflow-menu"
+                class="overflow-menu"
+                role="menu"
+                aria-label="Weather options"
+            >
+                <button class="menu-item" id="menu-item-widget" role="menuitem">Weather widget</button>
+                <div class="menu-divider"></div>
+                <button class="menu-item" id="menu-item-tempunit" role="menuitem">Temperature unit</button>
+                <div class="menu-divider"></div>
+                <button class="menu-item" id="menu-item-frequency" role="menuitem">Update frequency</button>
+                <div class="menu-divider"></div>
+                <button class="menu-item" id="menu-item-reset-order" role="menuitem">Reset to default order</button>
+                <div class="menu-divider"></div>
+                <button class="menu-item" id="menu-item-settings" role="menuitem">Settings</button>
+            </div>
+
+        </div>
 
     </header>
 
@@ -87,7 +119,7 @@
     <main class="dashboard-main">
 
         <!-- CURRENT WEATHER -->
-        <section class="current-weather-section">
+        <section class="current-weather-section" data-section-id="current-weather">
 
             <div
                 id="temp-display"
@@ -114,7 +146,7 @@
 
 
         <!-- HOURLY WEATHER -->
-        <section class="glass-card hourly-card">
+        <section class="glass-card hourly-card" data-section-id="hourly">
 
             <div class="card-section-title">
 
@@ -148,7 +180,7 @@
 
 
         <!-- WEATHER FORECAST -->
-        <section class="glass-card forecast-card">
+        <section class="glass-card forecast-card" data-section-id="forecast">
 
             <div class="card-section-title">
 
@@ -214,11 +246,11 @@
 
 
         <!-- DETAILS -->
-        <div class="details-grid">
+        <div class="details-grid" data-section-id="details">
 
 
             <!-- UV -->
-            <div class="glass-card detail-card">
+            <div class="glass-card detail-card" data-detail-id="uv">
 
                 <div class="card-section-title">
 
@@ -266,7 +298,7 @@
 
 
             <!-- FEELS LIKE -->
-            <div class="glass-card detail-card">
+            <div class="glass-card detail-card" data-detail-id="feelsLike">
 
                 <div class="card-section-title">
 
@@ -311,7 +343,7 @@
 
 
             <!-- WIND -->
-            <div class="glass-card detail-card">
+            <div class="glass-card detail-card" data-detail-id="wind">
 
                 <div class="card-section-title">
 
@@ -440,7 +472,7 @@
 
 
             <!-- HUMIDITY -->
-            <div class="glass-card detail-card">
+            <div class="glass-card detail-card" data-detail-id="humidity">
 
                 <div class="card-section-title">
 
@@ -466,7 +498,7 @@
 
 
             <!-- VISIBILITY -->
-            <div class="glass-card detail-card">
+            <div class="glass-card detail-card" data-detail-id="visibility">
 
                 <div class="card-section-title">
 
@@ -506,7 +538,7 @@
 
 
             <!-- PRESSURE -->
-            <div class="glass-card detail-card">
+            <div class="glass-card detail-card" data-detail-id="pressure">
 
                 <div class="card-section-title">
 
@@ -583,7 +615,7 @@
 
 
         <!-- LIFESTYLE -->
-        <section class="glass-card lifestyle-card">
+        <section class="glass-card lifestyle-card" data-section-id="lifestyle">
 
             <div class="card-section-title">
 
@@ -680,9 +712,39 @@
 
     </footer>
 
-</div>
 
-<script src="script.js"></script>
+    <!-- ===================== WEATHER WIDGET PANEL ===================== -->
+    <div id="widget-panel-overlay" class="panel-overlay">
+        <div class="panel-sheet" role="dialog" aria-modal="true" aria-labelledby="widget-panel-title">
 
-</body>
-</html>
+            <div class="panel-header">
+                <span class="panel-title" id="widget-panel-title">Weather widget</span>
+                <button class="panel-close-btn" id="widget-panel-close" aria-label="Close">×</button>
+            </div>
+
+            <div class="panel-body">
+
+                <label class="settings-row toggle-row">
+                    <span class="settings-row-label">Show weather widget</span>
+                    <input type="checkbox" id="widget-enabled" class="toggle-input">
+                    <span class="toggle-slider" aria-hidden="true"></span>
+                </label>
+
+                <div class="settings-subgroup-label">Widget style</div>
+
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Compact</span>
+                    <input type="radio" name="widget-style" id="widget-style-compact" value="compact">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Standard</span>
+                    <input type="radio" name="widget-style" id="widget-style-standard" value="standard">
+                </label>
+                <label class="settings-row radio-row">
+                    <span class="settings-row-label">Detailed</span>
+                    <input type="radio" name="widget-style" id="widget-style-detailed" value="detailed">
+                </label>
+
+                <div class="settings-subgroup-label">Information shown</div>
+
+                <label class="settings-row
