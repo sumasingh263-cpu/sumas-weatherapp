@@ -5,231 +5,684 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeatherApp Pro - Advanced Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Chart.js CDN for Interactive Weather Graphs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 </head>
+
 <body>
-    <div id="weather-bg" class="weather-bg clearNight">
-        <div id="sun-moon-glow" class="moon-glow"></div>
-        <div id="particles-container"></div>
-    </div>
 
-    <div class="app-container">
-        <!-- Top Header -->
-        <header class="app-header">
-            <button class="top-icon-btn" id="menu-btn" title="Menu">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            </button>
-            <div class="location-header-wrap" id="location-toggle-btn" title="Click to search">
-                <span id="city-title">Rantasalmi</span>
-                <div class="location-dot-indicator"></div>
-            </div>
-            <button class="top-icon-btn" id="options-btn" title="Options">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            </button>
-        </header>
+<div id="weather-bg" class="weather-bg">
+    <div id="particles-container"></div>
+</div>
 
-        <!-- Search & Favorites Overlay -->
-        <div id="search-container" class="search-container hidden">
-            <input type="text" id="search-input" placeholder="Search city name (e.g. Helsinki, Tokyo)..." autocomplete="off">
-            <button id="current-loc-btn" class="geo-btn">📍 Use Current Location</button>
-            <div class="favorites-section">
-                <span class="fav-title">Saved Favorites:</span>
-                <div id="favorites-chips" class="favorites-chips"></div>
-            </div>
-            <ul id="suggestions-list" class="suggestions-dropdown"></ul>
+<div class="app-container">
+
+    <!-- HEADER -->
+    <header class="app-header">
+
+        <button class="header-action-btn" id="cancel-btn">
+            Cancel
+        </button>
+
+        <div
+            class="location-header-wrap"
+            id="location-toggle-btn"
+            title="Search location"
+        >
+            <span id="city-title">Kathmandu</span>
         </div>
 
-        <!-- Saved Cities Modal -->
-        <div id="saved-cities-modal" class="search-container hidden">
+        <button
+            class="header-action-btn primary"
+            id="add-fav-btn"
+        >
+            Add
+        </button>
+
+    </header>
+
+
+    <!-- SEARCH -->
+    <div id="search-container" class="search-container hidden">
+
+        <div class="search-top">
+
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search city name..."
+                autocomplete="off"
+            >
+
+            <button
+                id="close-search-btn"
+                class="close-search-btn"
+                aria-label="Close search"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <button
+            id="current-loc-btn"
+            class="geo-btn"
+        >
+            📍 Use Current Location
+        </button>
+
+        <ul
+            id="suggestions-list"
+            class="suggestions-dropdown"
+        ></ul>
+
+    </div>
+
+
+    <!-- ERROR -->
+    <div
+        id="error-banner"
+        class="error-banner hidden"
+    ></div>
+
+
+    <main class="dashboard-main">
+
+        <!-- CURRENT WEATHER -->
+        <section class="current-weather-section">
+
+            <div
+                id="temp-display"
+                class="main-temp"
+            >
+                25°
+            </div>
+
+            <div
+                id="high-low-display"
+                class="main-high-low"
+            >
+                High: 27° Low: 21°
+            </div>
+
+            <div
+                id="weather-condition"
+                class="main-condition"
+            >
+                Light rain
+            </div>
+
+        </section>
+
+
+        <!-- HOURLY WEATHER -->
+        <section class="glass-card hourly-card">
+
             <div class="card-section-title">
-                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                Favorite Cities
+
+                <svg
+                    class="card-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+
+                Hourly weather
+
             </div>
-            <ul id="saved-cities-list" class="suggestions-dropdown" style="max-height: 200px;"></ul>
-            <button id="save-current-fav-btn" class="geo-btn" style="margin-top: 8px;">❤️ Save Current City to Favorites</button>
-        </div>
 
-        <div id="error-banner" class="error-banner hidden"></div>
-        <div id="loading-screen" class="loading-screen hidden">
-            <div class="spinner"></div>
-            <p>Loading real-time meteorological data...</p>
-        </div>
-
-        <main class="dashboard-main">
-            <!-- Current Weather -->
-            <section class="current-weather-section">
-                <div id="temp-display" class="main-temp">16°</div>
-                <div id="high-low-display" class="main-high-low">High: 18° Low: 13°</div>
-                <div id="weather-condition" class="main-condition">Clear</div>
-            </section>
-
-            <!-- Hourly Weather -->
-            <section class="glass-card hourly-card">
-                <div class="card-section-title">
-                    <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg>
-                    Hourly weather
-                </div>
-                <div id="hourly-scroll" class="hourly-scroll"></div>
-                <div id="chart-container-wrap" class="hidden" style="position: relative; height: 160px; width: 100%; margin-top: 10px;">
-                    <canvas id="tempChart"></canvas>
-                </div>
-            </section>
-
-            <!-- 5-Day Weather Forecast -->
-            <section class="glass-card forecast-card">
-                <div class="forecast-header-row">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        Weather forecast
-                    </div>
-                    <div class="forecast-view-toggles">
-                        <button id="chart-toggle-btn" class="top-icon-btn" style="padding: 4px 8px; border-radius: 8px;" title="Toggle Chart">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div id="forecast-list" class="forecast-list"></div>
-            </section>
-
-            <!-- Details Grid -->
-            <div class="details-grid">
-                <!-- UV Index -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
-                        UV index
-                    </div>
-                    <div id="uv-level" class="detail-big-text">Low</div>
-                    <div id="uv-num" class="detail-sub-num">1</div>
-                    <div class="uv-bar-container"><div class="uv-bar-fill" id="uv-bar-fill"></div></div>
-                    <p id="uv-desc" class="detail-desc">Almost no risk of sunburn</p>
-                </div>
-
-                <!-- Feels Like -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
-                        Feels like
-                    </div>
-                    <div id="feels-val" class="detail-big-text">13°</div>
-                    <p id="feels-actual" class="detail-sub-text">Actual temperature: 16°</p>
-                    <p id="feels-desc" class="detail-desc">Feels a bit colder than the actual temperature</p>
-                </div>
-
-                <!-- Wind Compass -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19 12H2"/></svg>
-                        Wind
-                    </div>
-                    <div class="wind-graphic-wrap">
-                        <div class="wind-compass">
-                            <span class="comp-n">N</span><span class="comp-e">E</span><span class="comp-s">S</span><span class="comp-w">W</span>
-                            <div id="wind-needle" class="wind-needle">➔</div>
-                            <div class="wind-center-val" id="wind-speed-val">2 m/s</div>
-                        </div>
-                    </div>
-                    <p id="wind-desc" class="detail-desc">Gentle breeze on the face</p>
-                </div>
-
-                <!-- Sunrise / Sunset -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6m-7.07-2.07l4.24 4.24M2 18h20m-3.5-5l-4.24 4.24M22 22H2"/></svg>
-                        Sunrise
-                    </div>
-                    <div id="sunrise-val" class="sunrise-big-time">4.52 am</div>
-                    <div class="sun-curve-graphic"></div>
-                    <p id="sunset-val" class="detail-sub-text" style="margin-top: 10px;">Sunset: 9.36 pm</p>
-                </div>
-
-                <!-- Humidity -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-                        Humidity
-                    </div>
-                    <div id="humidity-val" class="detail-big-text">66 %</div>
-                    <p id="humidity-desc" class="detail-desc" style="margin-top: 22px;">Fairly humid, drying will take longer</p>
-                </div>
-
-                <!-- Visibility -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        Visibility
-                    </div>
-                    <div id="vis-val" class="detail-big-text">30 km</div>
-                    <div class="vis-labels"><span style="font-size:0.75rem; opacity:0.7">Low</span><span style="font-size:0.75rem; opacity:0.7">High</span></div>
-                    <div class="vis-slider-track"><div class="vis-slider-thumb" style="left: 85%;"></div></div>
-                    <p id="vis-desc" class="detail-desc" style="margin-top: 10px;">Excellent visibility</p>
-                </div>
-
-                <!-- Pressure -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Pressure
-                    </div>
-                    <div class="pressure-gauge-wrap">
-                        <div class="pressure-dial">
-                            <span id="pressure-val" class="pressure-num">1011</span>
-                            <span class="pressure-unit">hPa</span>
-                        </div>
-                    </div>
-                    <p id="pressure-desc" class="detail-desc">Normal air pressure, comfortable weather</p>
-                </div>
-
-                <!-- Moon Phase -->
-                <div class="glass-card detail-card">
-                    <div class="card-section-title">
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                        Moon phase
-                    </div>
-                    <div class="moon-phase-content">
-                        <svg class="moon-icon-graphic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                        <div style="flex-grow: 1;">
-                            <div id="moon-phase-name" class="detail-sub-text" style="font-weight: 500;">Waning crescent</div>
-                            <p id="moonset-desc" class="detail-desc">Moon phase computed live</p>
-                        </div>
-                    </div>
+            <div
+                id="hourly-scroll"
+                class="hourly-scroll"
+            >
+                <div class="loading-text">
+                    Loading hourly weather…
                 </div>
             </div>
 
-            <!-- Lifestyle Insights -->
-            <section class="glass-card lifestyle-card">
+        </section>
+
+
+        <!-- WEATHER FORECAST -->
+        <section class="glass-card forecast-card">
+
+            <div class="card-section-title">
+
+                <svg
+                    class="card-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="18"
+                        rx="2"
+                    />
+                    <line
+                        x1="16"
+                        y1="2"
+                        x2="16"
+                        y2="6"
+                    />
+                    <line
+                        x1="8"
+                        y1="2"
+                        x2="8"
+                        y2="6"
+                    />
+                    <line
+                        x1="3"
+                        y1="10"
+                        x2="21"
+                        y2="10"
+                    />
+                </svg>
+
+                Weather forecast
+
+            </div>
+
+
+            <div
+                id="forecast-list"
+                class="forecast-list"
+            >
+                <div class="loading-text">
+                    Loading forecast…
+                </div>
+            </div>
+
+
+            <button
+                class="geo-btn extended-btn"
+                id="extended-forecast-btn"
+            >
+                Extended forecast
+            </button>
+
+        </section>
+
+
+        <!-- DETAILS -->
+        <div class="details-grid">
+
+
+            <!-- UV -->
+            <div class="glass-card detail-card">
+
                 <div class="card-section-title">
-                    <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    Lifestyle
-                </div>
-                <div class="lifestyle-grid">
-                    <div class="lifestyle-item">
-                        <svg class="lifestyle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-                        <span id="life-fishing" class="lifestyle-txt">Not ideal fishing</span>
-                    </div>
-                    <div class="lifestyle-item">
-                        <svg class="lifestyle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H5v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V10h1.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
-                        <span id="life-clothing" class="lifestyle-txt">Light jacket recommended</span>
-                    </div>
-                    <div class="lifestyle-item">
-                        <svg class="lifestyle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.5 20.5L3.5 13.5a5 5 0 0 1 7-7l2 2 2-2a5 5 0 0 1 7 7l-7 7-2 2z"/></svg>
-                        <span id="life-health" class="lifestyle-txt">Very high chance of getting a cold</span>
-                    </div>
-                    <div class="lifestyle-item">
-                        <svg class="lifestyle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                        <span id="life-stargazing" class="lifestyle-txt">Fairly suitable for stargazing</span>
-                    </div>
-                </div>
-            </section>
-        </main>
 
-        <footer class="app-footer-credit">
-            <p>Data provided by Open-Meteo & BestWeather</p>
-            <p style="font-size: 0.72rem; opacity: 0.45; margin-top: 4px;">Weather version: 18.1.2.356</p>
-        </footer>
-    </div>
+                    <svg
+                        class="card-icon"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle cx="12" cy="12" r="4"/>
+                        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
+                    </svg>
 
-    <script src="script.js"></script>
+                    UV index
+
+                </div>
+
+                <div
+                    id="uv-level"
+                    class="detail-big-text"
+                >
+                    Moderate
+                </div>
+
+                <div
+                    id="uv-num"
+                    class="detail-sub-num"
+                >
+                    5
+                </div>
+
+                <div class="uv-bar"></div>
+
+                <div
+                    id="uv-desc"
+                    class="detail-desc"
+                >
+                    Wear a sun hat when going out
+                </div>
+
+            </div>
+
+
+            <!-- FEELS LIKE -->
+            <div class="glass-card detail-card">
+
+                <div class="card-section-title">
+
+                    <svg
+                        class="card-icon"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                    </svg>
+
+                    Feels like
+
+                </div>
+
+                <div
+                    id="feels-val"
+                    class="detail-big-text"
+                >
+                    28°
+                </div>
+
+                <div
+                    id="feels-actual"
+                    class="detail-sub-text"
+                >
+                    Actual temperature: 25°
+                </div>
+
+                <div
+                    id="feels-desc"
+                    class="detail-desc"
+                >
+                    Feels a bit hotter than the actual temperature
+                </div>
+
+            </div>
+
+
+            <!-- WIND -->
+            <div class="glass-card detail-card">
+
+                <div class="card-section-title">
+
+                    <svg
+                        class="card-icon"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19 12H2"/>
+                    </svg>
+
+                    Wind
+
+                </div>
+
+                <div class="wind-compass-wrap">
+
+                    <div class="compass-dial">
+
+                        <span class="comp-n">N</span>
+                        <span class="comp-e">E</span>
+                        <span class="comp-s">S</span>
+                        <span class="comp-w">W</span>
+
+                        <div
+                            id="compass-needle"
+                            class="compass-needle"
+                        ></div>
+
+                    </div>
+
+                    <div class="wind-number">
+
+                        <span
+                            id="wind-val"
+                            class="detail-big-text"
+                        >
+                            1
+                        </span>
+
+                        <span class="unit">
+                            km/h
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="wind-desc"
+                    class="detail-desc centered"
+                >
+                    Normal breeze
+                </div>
+
+            </div>
+
+
+            <!-- SUNSET -->
+            <div class="glass-card detail-card">
+
+                <div class="card-section-title">
+
+                    <svg
+                        class="card-icon"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4"/>
+                    </svg>
+
+                    Sunset
+
+                </div>
+
+                <div
+                    id="sunset-val"
+                    class="detail-big-text"
+                >
+                    6:47 pm
+                </div>
+
+                <div class="sun-arc-container">
+
+                    <svg
+                        viewBox="0 0 120 45"
+                        class="sun-arc-svg"
+                    >
+
+                        <path
+                            d="M10,40 Q60,2 110,40"
+                            fill="none"
+                            stroke="rgba(255,255,255,.3)"
+                            stroke-width="2"
+                            stroke-dasharray="3 3"
+                        />
+
+                        <circle
+                            id="sun-arc-dot"
+                            cx="60"
+                            cy="12"
+                            r="5"
+                            fill="#f1c40f"
+                        />
+
+                    </svg>
+
+                </div>
+
+                <div
+                    id="sunrise-val"
+                    class="detail-sub-text"
+                >
+                    Sunrise: 5:31 am
+                </div>
+
+            </div>
+
+
+            <!-- HUMIDITY -->
+            <div class="glass-card detail-card">
+
+                <div class="card-section-title">
+
+                    💧 Humidity
+
+                </div>
+
+                <div
+                    id="humidity-val"
+                    class="detail-big-text"
+                >
+                    81 %
+                </div>
+
+                <div
+                    id="humidity-desc"
+                    class="detail-desc"
+                >
+                    Feels more stuffy
+                </div>
+
+            </div>
+
+
+            <!-- VISIBILITY -->
+            <div class="glass-card detail-card">
+
+                <div class="card-section-title">
+
+                    👁 Visibility
+
+                </div>
+
+                <div
+                    id="visibility-val"
+                    class="detail-big-text"
+                >
+                    7 km
+                </div>
+
+                <div class="visibility-labels">
+                    <span>Low</span>
+                    <span>High</span>
+                </div>
+
+                <div class="visibility-track">
+
+                    <div
+                        id="visibility-marker"
+                        class="visibility-marker"
+                    ></div>
+
+                </div>
+
+                <div
+                    id="visibility-desc"
+                    class="detail-desc"
+                >
+                    Good visibility
+                </div>
+
+            </div>
+
+
+            <!-- PRESSURE -->
+            <div class="glass-card detail-card">
+
+                <div class="card-section-title">
+
+                    ◷ Pressure
+
+                </div>
+
+                <div class="pressure-gauge-wrap">
+
+                    <div class="pressure-gauge-arc">
+
+                        <span
+                            id="pressure-val"
+                            class="pressure-value"
+                        >
+                            1007 hPa
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="pressure-desc"
+                    class="detail-desc centered"
+                >
+                    Normal air pressure
+                </div>
+
+            </div>
+
+
+            <!-- MOON -->
+            <div class="glass-card detail-card">
+
+                <div class="card-section-title">
+
+                    ◐ Moon phase
+
+                </div>
+
+                <div class="moon-wrap">
+
+                    <div
+                        id="moon-icon"
+                        class="moon-icon"
+                    >
+                        🌑
+                    </div>
+
+                    <div>
+
+                        <div
+                            id="moon-phase-name"
+                            class="moon-name"
+                        >
+                            Moon phase
+                        </div>
+
+                        <div
+                            id="moonset-val"
+                            class="detail-sub-text"
+                        >
+                            Moon details
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LIFESTYLE -->
+        <section class="glass-card lifestyle-card">
+
+            <div class="card-section-title">
+
+                ♡ Lifestyle
+
+            </div>
+
+            <div class="lifestyle-grid">
+
+                <div class="life-item">
+
+                    <span>🎣</span>
+
+                    <div>
+                        <div>Fishing</div>
+                        <div
+                            id="fishing-desc"
+                            class="life-sub"
+                        >
+                            Loading…
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="life-item">
+
+                    <span>👕</span>
+
+                    <div>
+                        <div>Clothing</div>
+                        <div
+                            id="clothing-desc"
+                            class="life-sub"
+                        >
+                            Loading…
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="life-item">
+
+                    <span>💊</span>
+
+                    <div>
+                        <div>Health</div>
+                        <div
+                            id="health-desc"
+                            class="life-sub"
+                        >
+                            Loading…
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="life-item">
+
+                    <span>🔭</span>
+
+                    <div>
+                        <div>Stargazing</div>
+                        <div
+                            id="star-desc"
+                            class="life-sub"
+                        >
+                            Loading…
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer class="app-footer-credit">
+
+        <p>
+            Data provided by Open-Meteo <br> 
+            Powered by PROJECT POSSIBLE
+        </p>
+
+        <p class="version">
+            Weather version: 18.2.0
+        </p>
+
+    </footer>
+
+</div>
+
+<script src="script.js"></script>
+
 </body>
 </html>
