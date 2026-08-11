@@ -101,7 +101,7 @@ body {
 }
 
 .header-action-btn.primary {
-    color: white;
+    color: var(--accent-blue);
     font-weight: 500;
 }
 
@@ -216,20 +216,20 @@ body {
 #search-input {
     width: 100%;
     padding: 10px 12px;
-    background: rgba(255,255,255,.08);
+    background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
-    color: white;
+    color: var(--text-primary);
     font-size: .9rem;
     outline: none;
 }
 
 #search-input:focus {
-    border-color: rgba(77,166,255,.7);
+    border-color: var(--accent-blue);
 }
 
 #search-input::placeholder {
-    color: rgba(255,255,255,.4);
+    color: var(--text-secondary);
 }
 
 .close-search-btn {
@@ -237,8 +237,8 @@ body {
     height: 38px;
     border: 1px solid var(--glass-border);
     border-radius: 8px;
-    background: rgba(255,255,255,.06);
-    color: white;
+    background: var(--glass-bg);
+    color: var(--text-primary);
     font-size: 1.35rem;
     cursor: pointer;
 }
@@ -271,11 +271,11 @@ body {
     padding: 10px;
     cursor: pointer;
     font-size: .9rem;
-    border-bottom: 1px solid rgba(255,255,255,.05);
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .suggestions-dropdown li:hover {
-    background: rgba(255,255,255,.1);
+    background: var(--glass-bg);
 }
 
 
@@ -894,6 +894,7 @@ body {
     padding: 6px 2px;
     border-bottom: 1px solid var(--glass-border);
     cursor: pointer;
+    position: relative;
 }
 
 .settings-row:last-child {
@@ -929,7 +930,6 @@ body {
 }
 
 /* TOGGLE SWITCH */
-
 .toggle-row input.toggle-input {
     position: absolute;
     opacity: 0;
@@ -1151,4 +1151,4 @@ body {
         max-height: 90vh;
     }
 
-} 
+}
