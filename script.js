@@ -1,4 +1,4 @@
-// coordinates for Kathmandu / Fallback
+// Default coordinates for Kathmandu / Fallback
 let currentLat = 27.7172;
 let currentLon = 85.3240;
 let currentCityName = "Kathmandu";
@@ -105,12 +105,12 @@ function deepMergeDefaults(defaults, saved) {
 function loadSettings() {
     try {
         const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-        if (!raw) return { ...defaultSettings };
+        if (!raw) return JSON.parse(JSON.stringify(defaultSettings));
         const parsed = JSON.parse(raw);
         return deepMergeDefaults(defaultSettings, parsed);
     } catch (err) {
         console.error("Failed to load settings, using defaults:", err);
-        return { ...defaultSettings };
+        return JSON.parse(JSON.stringify(defaultSettings));
     }
 }
 
@@ -258,7 +258,7 @@ function reverseGeocode(lat, lon) {
 async function fetchWeatherData(lat, lon, cityName) {
     try {
         hideErrorBanner(); // Clear any previous error banner upon successful data call
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,visibility&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error("Failed to fetch weather data");
@@ -275,6 +275,7 @@ async function fetchWeatherData(lat, lon, cityName) {
         showErrorBanner("Failed to load weather data. Please try again.");
     }
 }
+
 // Renders every part of the dashboard from a weather-data payload. Used both
 // after a fresh fetch and after a settings change (unit, toggles) so we
 // never need a second fetch just to re-render. Does not touch the animated
@@ -291,6 +292,7 @@ function renderAllWeather(data, cityName) {
 
 // Re-renders from the cached payload only — no network call. Used when the
 // user changes display settings like temperature unit or info toggles.
+function rerenderFromCache() {
 function rerenderFromCache() {
     if (!lastWeatherData) return;
     renderAllWeather(lastWeatherData, currentCityName);
@@ -431,8 +433,10 @@ function updateDetails(data) {
     const pressure = current.surface_pressure;
     document.getElementById("pressure-val").textContent = `${Math.round(pressure)} hPa`;
 
-    if (typeof current.visibility === "number") {
-        const visibilityKm = (current.visibility / 1000).toFixed(1);
+    // visibility is an hourly field in Open-Meteo, not a current field
+    const nowHour = new Date().getHours();
+    if (data.hourly && Array.isArray(data.hourly.visibility) && typeof data.hourly.visibility[nowHour] === "number") {
+        const visibilityKm = (data.hourly.visibility[nowHour] / 1000).toFixed(1);
         document.getElementById("visibility-val").textContent = `${visibilityKm} km`;
     }
 }
@@ -480,7 +484,6 @@ function getWeatherIcon(code) {
    stay in the DOM (display:none) rather than being removed, so re-enabling
    a toggle doesn't require re-fetching or rebuilding anything.
    ========================================================================= */
-
 function applyWeatherInformationVisibility() {
     const info = appSettings.weatherInformation;
 
@@ -637,7 +640,7 @@ function setTheme(theme) {
    ========================================================================= */
 
 const WEATHER_BACKGROUNDS = {
-    clear:   { day: "linear-gradient(135deg, #4a90d9 0%, #2c5f8a 100%)", night: "linear-gradient(135deg, #1b2540 0%, #0c1220 100%)" },
+clear:   { day: "linear-gradient(135deg, #4a90d9 0%, #2c5f8a 100%)", night: "linear-gradient(135deg, #1b2540 0%, #0c1220 100%)" },
     cloudy:  { day: "linear-gradient(135deg, #5c6b7a 0%, #384959 100%)", night: "linear-gradient(135deg, #2a3542 0%, #151c24 100%)" },
     rain:    { day: "linear-gradient(135deg, #3a4a5c 0%, #1c2630 100%)", night: "linear-gradient(135deg, #202a35 0%, #10151c 100%)" },
     snow:    { day: "linear-gradient(135deg, #7a8ba0 0%, #4a5a6c 100%)", night: "linear-gradient(135deg, #2e3a48 0%, #161d24 100%)" },
@@ -772,6 +775,8 @@ function updateWeatherWidgetPreview(data, cityName) {
 
     preview.innerHTML = visibleParts.join("") || `<div class="row-note">Nothing selected to show</div>`;
 }
+
+
 /* =========================================================================
    THREE-DOT MENU + PANELS + SETTINGS PAGE
    Wiring is attached exactly once from initSettingsUI() (called once from
@@ -1002,7 +1007,6 @@ function wireSettingsPanel() {
         saveSettings();
     });
 
-
     // Appearance
     wireRadioListener("theme-system", () => setTheme("system"));
     wireRadioListener("theme-light", () => setTheme("light"));
@@ -1084,6 +1088,7 @@ function wireConfirmDialogs() {
         });
     }
 }
+
 // Sets every control's displayed value from appSettings, without attaching
 // any listeners. Safe to call repeatedly (e.g. after a data reset).
 function populateSettingsControls() {
