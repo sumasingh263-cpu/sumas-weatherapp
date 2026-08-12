@@ -930,6 +930,7 @@ body {
 }
 
 /* TOGGLE SWITCH */
+
 .toggle-row input.toggle-input {
     position: absolute;
     opacity: 0;
