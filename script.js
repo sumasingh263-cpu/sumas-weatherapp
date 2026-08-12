@@ -293,8 +293,7 @@ function renderAllWeather(data, cityName) {
 // Re-renders from the cached payload only — no network call. Used when the
 // user changes display settings like temperature unit or info toggles.
 function rerenderFromCache() {
-function rerenderFromCache() {
-    if (!lastWeatherData) return;
+if (!lastWeatherData) return;
     renderAllWeather(lastWeatherData, currentCityName);
 }
 
@@ -327,6 +326,7 @@ function updateCurrentWeather(data, cityName) {
 
 function updateHourlyWeather(data) {
     const hourlyScroll = document.getElementById("hourly-scroll");
+    if (!hourlyScroll) return;
     hourlyScroll.innerHTML = "";
 
     const times = data.hourly.time;
@@ -334,11 +334,15 @@ function updateHourlyWeather(data) {
     const codes = data.hourly.weather_code;
     const precip = data.hourly.precipitation_probability;
 
-    const nowIndex = new Date().getHours();
-    
-    for (let i = nowIndex; i < nowIndex + 24 && i < times.length; i++) {
+    // Use current.time from the API (location-local timezone) to find the
+    // correct starting index — avoids mismatch when the user's browser timezone
+    // differs from the searched location's timezone.
+    const currentHourStr = data.current.time.substring(0, 13); // "YYYY-MM-DDTHH"
+    const startIndex = Math.max(0, times.findIndex(t => t.startsWith(currentHourStr)));
+
+    for (let i = startIndex; i < startIndex + 24 && i < times.length; i++) {
         const dateObj = new Date(times[i]);
-        const timeLabel = i === nowIndex ? "Now" : dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+        const timeLabel = i === startIndex ? "Now" : dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
         const temp = formatTemp(temps[i]);
         const icon = getWeatherIcon(codes[i]);
         const showRain = appSettings.weatherInformation.precipitation;
@@ -358,6 +362,7 @@ function updateHourlyWeather(data) {
 
 function updateDailyForecast(data) {
     const forecastList = document.getElementById("forecast-list");
+    if (!forecastList) return;
     forecastList.innerHTML = "";
 
     const days = data.daily.time;
@@ -406,49 +411,93 @@ function updateDetails(data) {
     const current = data.current;
     const daily = data.daily;
 
-    const uvVal = daily.uv_index_max ? daily.uv_index_max[0] : 5;
-    document.getElementById("uv-num").textContent = uvVal;
-    document.getElementById("uv-level").textContent = uvVal > 8 ? "Very High" : uvVal > 5 ? "High" : "Moderate";
+    // UV Index
+    const uvVal = daily.uv_index_max ? Math.round(daily.uv_index_max[0]) : 5;
+    const uvEl = document.getElementById("uv-num");
+    const uvLvlEl = document.getElementById("uv-level");
+    const uvDescEl = document.getElementById("uv-desc");
+    if (uvEl) uvEl.textContent = uvVal;
+    if (uvLvlEl) uvLvlEl.textContent = uvVal >= 11 ? "Extreme" : uvVal >= 8 ? "Very High" : uvVal >= 6 ? "High" : uvVal >= 3 ? "Moderate" : "Low";
+    if (uvDescEl) uvDescEl.textContent = uvVal >= 8 ? "Apply SPF 50+ sunscreen" : uvVal >= 3 ? "Wear a sun hat when going out" : "No protection required";
 
+    // Feels Like
     const feels = formatTemp(current.apparent_temperature);
     const actual = formatTemp(current.temperature_2m);
-    document.getElementById("feels-val").textContent = feels;
-    document.getElementById("feels-actual").textContent = `Actual temperature: ${actual}`;
+    const feelsEl = document.getElementById("feels-val");
+    const feelsActualEl = document.getElementById("feels-actual");
+    const feelsDescEl = document.getElementById("feels-desc");
+    if (feelsEl) feelsEl.textContent = feels;
+    if (feelsActualEl) feelsActualEl.textContent = `Actual temperature: ${actual}`;
+    if (feelsDescEl) {
+        const diff = current.apparent_temperature - current.temperature_2m;
+        feelsDescEl.textContent = diff > 2 ? "Feels hotter than the actual temperature"
+            : diff < -2 ? "Feels cooler than the actual temperature"
+            : "Feels close to the actual temperature";
+    }
 
+    // Wind
     const windSpeed = Math.round(current.wind_speed_10m);
     const windDir = current.wind_direction_10m;
-    document.getElementById("wind-val").textContent = windSpeed;
-    document.getElementById("compass-needle").style.transform = `rotate(${windDir}deg)`;
+    const windEl = document.getElementById("wind-val");
+    const compassEl = document.getElementById("compass-needle");
+    const windDescEl = document.getElementById("wind-desc");
+    if (windEl) windEl.textContent = windSpeed;
+    if (compassEl) compassEl.style.transform = `rotate(${windDir}deg)`;
+    if (windDescEl) windDescEl.textContent = windSpeed < 1 ? "Calm" : windSpeed < 12 ? "Light breeze" : windSpeed < 29 ? "Moderate breeze" : windSpeed < 50 ? "Fresh breeze" : "Strong wind";
 
+    // Sunset / Sunrise
     if (daily.sunrise && daily.sunset) {
         const sunriseTime = new Date(daily.sunrise[0]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
         const sunsetTime = new Date(daily.sunset[0]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-        document.getElementById("sunset-val").textContent = sunsetTime.toLowerCase();
-        document.getElementById("sunrise-val").textContent = `Sunrise: ${sunriseTime.toLowerCase()}`;
+        const sunsetEl = document.getElementById("sunset-val");
+        const sunriseEl = document.getElementById("sunrise-val");
+        if (sunsetEl) sunsetEl.textContent = sunsetTime.toLowerCase();
+        if (sunriseEl) sunriseEl.textContent = `Sunrise: ${sunriseTime.toLowerCase()}`;
     }
 
-    const humidity = current.relative_humidity_2m;
-    document.getElementById("humidity-val").textContent = `${humidity} %`;
+    // Humidity
+const humidity = current.relative_humidity_2m;
+    const humEl = document.getElementById("humidity-val");
+    const humDescEl = document.getElementById("humidity-desc");
+    if (humEl) humEl.textContent = `${humidity} %`;
+    if (humDescEl) humDescEl.textContent = humidity >= 80 ? "Feels very stuffy" : humidity >= 60 ? "Feels a bit stuffy" : humidity >= 40 ? "Comfortable humidity" : "Dry air today";
 
-    const pressure = current.surface_pressure;
-    document.getElementById("pressure-val").textContent = `${Math.round(pressure)} hPa`;
+    // Pressure
+    const pressure = Math.round(current.surface_pressure);
+    const pressEl = document.getElementById("pressure-val");
+    const pressDescEl = document.getElementById("pressure-desc");
+    if (pressEl) pressEl.textContent = `${pressure} hPa`;
+    if (pressDescEl) pressDescEl.textContent = pressure > 1020 ? "High pressure — fair weather" : pressure < 1000 ? "Low pressure — unsettled weather" : "Normal air pressure";
 
-    // visibility is an hourly field in Open-Meteo, not a current field
-    const nowHour = new Date().getHours();
-    if (data.hourly && Array.isArray(data.hourly.visibility) && typeof data.hourly.visibility[nowHour] === "number") {
-        const visibilityKm = (data.hourly.visibility[nowHour] / 1000).toFixed(1);
-        document.getElementById("visibility-val").textContent = `${visibilityKm} km`;
+    // Visibility — hourly field; use timezone-safe index
+    const currentHourStr = data.current.time.substring(0, 13);
+    const visIdx = Math.max(0, (data.hourly.time || []).findIndex(t => t.startsWith(currentHourStr)));
+    if (data.hourly && Array.isArray(data.hourly.visibility) && typeof data.hourly.visibility[visIdx] === "number") {
+        const visKm = (data.hourly.visibility[visIdx] / 1000).toFixed(1);
+        const visEl = document.getElementById("visibility-val");
+        const visDescEl = document.getElementById("visibility-desc");
+        const visMarker = document.getElementById("visibility-marker");
+        if (visEl) visEl.textContent = `${visKm} km`;
+        if (visDescEl) visDescEl.textContent = parseFloat(visKm) >= 10 ? "Excellent visibility" : parseFloat(visKm) >= 5 ? "Good visibility" : parseFloat(visKm) >= 1 ? "Moderate visibility" : "Poor visibility — fog possible";
+        if (visMarker) visMarker.style.left = `${Math.min(100, (parseFloat(visKm) / 24) * 100)}%`;
     }
 }
 
 function updateLifestyle(data) {
     const current = data.current;
     const temp = current.temperature_2m;
-    
-    document.getElementById("fishing-desc").textContent = temp > 15 && temp < 30 ? "Favorable conditions" : "Sub-optimal conditions";
-    document.getElementById("clothing-desc").textContent = temp < 15 ? "Wear a jacket or warm layers" : "Light clothing is recommended";
-    document.getElementById("health-desc").textContent = "Low pollen levels expected today";
-    document.getElementById("star-desc").textContent = current.weather_code === 0 ? "Clear skies, great for stargazing" : "Cloudy skies, poor visibility";
+    const code = current.weather_code;
+    const wind = current.wind_speed_10m;
+
+    const fishingEl = document.getElementById("fishing-desc");
+    const clothingEl = document.getElementById("clothing-desc");
+    const healthEl = document.getElementById("health-desc");
+    const starEl = document.getElementById("star-desc");
+
+    if (fishingEl) fishingEl.textContent = temp > 10 && temp < 32 && code < 50 ? "Good fishing conditions" : code >= 95 ? "Storm — avoid open water" : "Sub-optimal conditions";
+    if (clothingEl) clothingEl.textContent = temp < 5 ? "Heavy winter layers" : temp < 15 ? "Jacket or warm layers recommended" : temp < 25 ? "Light clothing is fine" : "Light, breathable clothing";
+    if (healthEl) healthEl.textContent = wind > 30 ? "Strong winds — take care outdoors" : code >= 61 && code <= 67 ? "Carry an umbrella" : "Comfortable conditions today";
+    if (starEl) starEl.textContent = code === 0 ? "Clear skies — great for stargazing" : code <= 2 ? "Mostly clear — decent stargazing" : "Cloudy skies — limited stargazing";
 }
 
 function getWeatherDescription(code) {
@@ -484,6 +533,7 @@ function getWeatherIcon(code) {
    stay in the DOM (display:none) rather than being removed, so re-enabling
    a toggle doesn't require re-fetching or rebuilding anything.
    ========================================================================= */
+
 function applyWeatherInformationVisibility() {
     const info = appSettings.weatherInformation;
 
@@ -640,7 +690,7 @@ function setTheme(theme) {
    ========================================================================= */
 
 const WEATHER_BACKGROUNDS = {
-clear:   { day: "linear-gradient(135deg, #4a90d9 0%, #2c5f8a 100%)", night: "linear-gradient(135deg, #1b2540 0%, #0c1220 100%)" },
+    clear:   { day: "linear-gradient(135deg, #4a90d9 0%, #2c5f8a 100%)", night: "linear-gradient(135deg, #1b2540 0%, #0c1220 100%)" },
     cloudy:  { day: "linear-gradient(135deg, #5c6b7a 0%, #384959 100%)", night: "linear-gradient(135deg, #2a3542 0%, #151c24 100%)" },
     rain:    { day: "linear-gradient(135deg, #3a4a5c 0%, #1c2630 100%)", night: "linear-gradient(135deg, #202a35 0%, #10151c 100%)" },
     snow:    { day: "linear-gradient(135deg, #7a8ba0 0%, #4a5a6c 100%)", night: "linear-gradient(135deg, #2e3a48 0%, #161d24 100%)" },
@@ -683,7 +733,7 @@ function applyWeatherVisuals() {
     }
 
     // Particles
-    if (!appSettings.appearance.weatherAnimation) return;
+if (!appSettings.appearance.weatherAnimation) return;
     if (category !== "rain" && category !== "snow") return;
 
     const particleType = category === "rain" ? "rain-particle" : "snow-particle";
@@ -1030,7 +1080,7 @@ function wireSettingsPanel() {
     });
 
     // Weather information
-    WEATHER_INFO_TOGGLE_FIELDS.forEach(([id, field]) => {
+WEATHER_INFO_TOGGLE_FIELDS.forEach(([id, field]) => {
         wireToggleListener(id, (val) => {
             appSettings.weatherInformation[field] = val;
             saveSettings();
