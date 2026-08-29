@@ -44,23 +44,30 @@
 }
 
 body {
-    background: var(--body-bg);
-    color: var(--text-primary);
+    background: transparent;
+    color: #ffffff; /* Default all text to white */
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow-x: hidden;
-    transition: background .3s ease, color .3s ease;
 }
 
+.detail-sub-text,
+.detail-sub-num,
+.detail-desc,
+.card-section-title,
+.life-sub,
+.main-high-low {
+    color: rgba(255, 255, 255, 0.75); /* Light gray for secondary text */
+}
 .weather-bg {
     position: fixed;
     inset: 0;
     width: 100vw;
     height: 100vh;
     background: var(--bg-gradient);
-    z-index: -1;
+    z-index: 0;
     transition: background 1s ease;
 }
 
@@ -68,18 +75,15 @@ body {
     width: 100%;
     max-width: 480px;
     min-height: 100vh;
-    background: var(--app-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    background: transparent; /* Changed from var(--app-bg) */
+    backdrop-filter: none;   /* Removed blur from main container */
+    -webkit-backdrop-filter: none;
     display: flex;
     flex-direction: column;
     padding: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.6);
     position: relative;
     z-index: 2;
-    transition: background .3s ease;
 }
-
 /* HEADER */
 
 .app-header {
@@ -329,13 +333,15 @@ body {
 /* GLASS CARDS */
 
 .glass-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.25); /* Darker transparent layer */
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 18px;
     padding: 14px;
     margin-bottom: 10px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px); /* Strong blur on the card itself */
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    color: #ffffff; /* Force text to be white for better contrast */
 }
 
 .card-section-title {
@@ -1132,17 +1138,14 @@ body {
 }
 /* CONTAINED WEATHER SKY VISUALS */
 
-.sky-visuals {
-    position: relative;
+#sky-visuals {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: 100px;
-    overflow: hidden;
-    border-radius: 14px;
-    background: rgba(0, 0, 0, 0.12);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    background: transparent;
 }
 
 .celestial-body {
@@ -1162,15 +1165,85 @@ body {
 
 .cloud-layer {
     position: absolute;
-    background: rgba(66, 169, 228, 0.637);
+    background: rgba(255, 255, 255, 0.5);
     border-radius: 500px;
-    filter: blur(16px);
+    filter: blur(25px);
     animation: driftClouds linear infinite;
     pointer-events: none;
     z-index: 1;
 }
 
 @keyframes driftClouds {
-    0% { transform: translateX(-150px); }
-    100% { transform: translateX(380px); }
+    0% { transform: translateX(-300px); }
+    100% { transform: translateX(120vw); }
+}
+/* Fix Search Input and Dropdown Text */
+#search-input {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+#search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.suggestions-dropdown li {
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.4); /* Darker backdrop for dropdown */
+}
+
+.suggestions-dropdown li:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Fix Time, Titles, and Lifestyle text visibility */
+.hourly-time, 
+.card-section-title, 
+#city-title,
+.life-sub {
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Helps text pop on dynamic backgrounds */
+}
+/* 1. Fix Search Input & Dropdown (Dark text on light background) */
+#search-input {
+    color: #111111 !important; 
+    background: #ffffff !important; 
+}
+
+#search-input::placeholder {
+    color: #555555 !important;
+}
+
+.suggestions-dropdown {
+    background: #ffffff !important;
+}
+
+.suggestions-dropdown li {
+    color: #111111 !important;
+    background: transparent !important;
+}
+
+.suggestions-dropdown li:hover {
+    background: #e6e6e6 !important;
+}
+
+/* 2. Fix Details Cards Sub-text (Bright white/light grey with shadow) */
+.detail-sub-text,
+.detail-sub-num,
+.detail-desc,
+.unit,
+.compass-dial span,
+.visibility-labels span,
+.row-note {
+    color: #eaeaea !important; 
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+    font-weight: 500 !important;
+}
+
+/* Ensure the main big numbers (26°, 99%, etc.) are pure white */
+.detail-big-text,
+.pressure-value,
+.moon-name {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
 }
