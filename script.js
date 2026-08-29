@@ -517,12 +517,62 @@ function updateLifestyle(data) {
     const healthEl = document.getElementById("health-desc");
     const starEl = document.getElementById("star-desc");
 
-    if (fishingEl) fishingEl.textContent = temp > 10 && temp < 32 && code < 50 ? "Good fishing conditions" : code >= 95 ? "Storm — avoid open water" : "Sub-optimal conditions";
-    if (clothingEl) clothingEl.textContent = temp < 5 ? "Heavy winter layers" : temp < 15 ? "Jacket or warm layers recommended" : temp < 25 ? "Light clothing is fine" : "Light, breathable clothing";
-    if (healthEl) healthEl.textContent = wind > 30 ? "Strong winds — take care outdoors" : code >= 61 && code <= 67 ? "Carry an umbrella" : "Comfortable conditions today";
-    if (starEl) starEl.textContent = code === 0 ? "Clear skies — great for stargazing" : code <= 2 ? "Mostly clear — decent stargazing" : "Cloudy skies — limited stargazing";
-}
+    // 1. Fishing Logic
+    if (fishingEl) {
+        if (code >= 95 || wind > 30) {
+            fishingEl.textContent = "Storm/High wind — Avoid open water";
+        } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 86)) {
+            fishingEl.textContent = "Precipitation — Not ideal for fishing";
+        } else if (temp > 10 && temp < 30 && code <= 3) {
+            fishingEl.textContent = "Good fishing conditions today!";
+        } else {
+            fishingEl.textContent = "Fair conditions for fishing";
+        }
+    }
 
+    // 2. Clothing Logic (Based on Temperature)
+    if (clothingEl) {
+        if (temp < 0) {
+            clothingEl.textContent = "Freezing! Heavy thermal layers needed";
+        } else if (temp < 10) {
+            clothingEl.textContent = "Cold — Winter coat and gloves recommended";
+        } else if (temp < 18) {
+            clothingEl.textContent = "Cool — A light jacket or sweater is good";
+        } else if (temp < 26) {
+            clothingEl.textContent = "Warm — T-shirt and light clothing are fine";
+        } else {
+            clothingEl.textContent = "Hot! Wear light, breathable fabrics";
+        }
+    }
+
+    // 3. Health & Outdoor Safety Logic
+    if (healthEl) {
+        if (code >= 95) {
+            healthEl.textContent = "Thunderstorm — Stay indoors if possible";
+        } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+            healthEl.textContent = "Rainy — Carry an umbrella to stay dry";
+        } else if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
+            healthEl.textContent = "Snowing — Dress warm and watch your step";
+        } else if (wind > 35) {
+            healthEl.textContent = "High winds — Protect eyes and skin";
+        } else if (code === 45 || code === 48) {
+            healthEl.textContent = "Foggy — Low visibility, take care traveling";
+        } else {
+            healthEl.textContent = "Comfortable outdoor conditions today";
+        }
+    }
+
+    // 4. Stargazing Logic
+    if (starEl) {
+        if (code === 0) {
+            starEl.textContent = "Clear skies — Perfect for stargazing!";
+        } else if (code === 1 || code === 2) {
+            starEl.textContent = "Partly cloudy — Some stars will be visible";
+        } else {
+            starEl.textContent = "Too cloudy — Poor visibility for stars";
+        }
+    }
+}
 function getWeatherDescription(code) {
     const descriptions = {
         0:  "Clear sky",
@@ -707,29 +757,32 @@ function setTheme(theme) {
 }
 
 const WEATHER_BACKGROUNDS = {
-    clear:   { 
-        day: "linear-gradient(135deg, #2980b9 0%, #6dd5ed 50%, #f1c40f 100%)", 
-        night: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)" 
+    clear: { 
+        // Matches the bright sun flare effect
+        day: "radial-gradient(circle at 30% 20%, #fdfbfb 0%, #51a6fb 25%, #1972d3 100%)", 
+        night: "linear-gradient(180deg, #091424 0%, #173259 100%)" 
     },
-    cloudy:  { 
-        day: "linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%)", 
-        night: "linear-gradient(135deg, #232526 0%, #414345 100%)" 
+    cloudy: { 
+        // Matches the overcast/grey-blue look
+        day: "linear-gradient(180deg, #6c7c8c 0%, #9baab8 100%)", 
+        night: "linear-gradient(180deg, #243242 0%, #3a4c5e 100%)" 
     },
-    rain:    { 
-        day: "linear-gradient(135deg, #373b44 0%, #4286f4 100%)", 
-        night: "linear-gradient(135deg, #141e30 0%, #243b55 100%)" 
+    rain: { 
+        // Matches the deep, dark stormy blue
+        day: "linear-gradient(180deg, #2b394a 0%, #4c627a 100%)", 
+        night: "linear-gradient(180deg, #182230 0%, #2b394a 100%)" 
     },
-    snow:    { 
-        day: "linear-gradient(135deg, #e6dada 0%, #274046 100%)", 
-        night: "linear-gradient(135deg, #1f2937 0%, #111827 100%)" 
+    snow: { 
+        day: "linear-gradient(180deg, #a5b5c4 0%, #dbe2e8 100%)", 
+        night: "linear-gradient(180deg, #2c3642 0%, #151a21 100%)" 
     },
-    storm:   { 
-        day: "linear-gradient(135deg, #1f1c2c 0%, #928dab 100%)", 
-        night: "linear-gradient(135deg, #09090e 0%, #1a1a2e 100%)" 
+    storm: { 
+        day: "linear-gradient(180deg, #1b202e 0%, #384259 100%)", 
+        night: "linear-gradient(180deg, #0f121a 0%, #1b202e 100%)" 
     },
-    fog:     { 
-        day: "linear-gradient(135deg, #606c88 0%, #3f4c6b 100%)", 
-        night: "linear-gradient(135deg, #2c3e50 0%, #000000 100%)" 
+    fog: { 
+        day: "linear-gradient(180deg, #8b96a0 0%, #b8c1c9 100%)", 
+        night: "linear-gradient(180deg, #2c343b 0%, #1a1e24 100%)" 
     }
 };
 
