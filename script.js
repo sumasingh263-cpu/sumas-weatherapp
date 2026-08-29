@@ -3,12 +3,9 @@ let currentLat = 27.7172;
 let currentLon = 85.3240;
 let currentCityName = "Kathmandu";
 
-// Cached last successful weather response, so unit/display toggles can
-// re-render without re-fetching from the API.
+// Cached last successful weather response
 let lastWeatherData = null;
 
-// Timer/animation handles — always cleared before being re-created so we
-// never end up with duplicate intervals.
 let refreshTimerId = null;
 let particleIntervalId = null;
 
@@ -16,7 +13,9 @@ const SETTINGS_STORAGE_KEY = "weatherAppSettings";
 
 const defaultSettings = {
     temperatureUnit: "C",
+    windUnit: "km/h",
     updateFrequency: "auto",
+    favorites: ["Kathmandu"],
 
     sectionOrder: ["current-weather", "hourly", "forecast", "details", "lifestyle"],
 
@@ -74,8 +73,6 @@ const defaultSettings = {
 
 let appSettings = loadSettings();
 
-// Deep-merges saved data over the defaults so old saved blobs (or partially
-// saved objects) never crash on newly added keys.
 function deepMergeDefaults(defaults, saved) {
     const result = Array.isArray(defaults) ? defaults.slice() : { ...defaults };
     if (!saved || typeof saved !== "object") return result;
@@ -118,8 +115,6 @@ function saveSettings() {
     try {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings));
     } catch (err) {
-        // localStorage may be unavailable (private browsing, quota, etc).
-        // The app keeps working in-memory for the session; it just won't persist.
         console.error("Failed to save settings:", err);
     }
 }
@@ -143,6 +138,7 @@ function setupEventListeners() {
     const searchContainer = document.getElementById("search-container");
     const searchInput = document.getElementById("search-input");
     const currentLocBtn = document.getElementById("current-loc-btn");
+    const addFavBtn = document.getElementById("add-fav-btn");
 
     locationToggleBtn.addEventListener("click", () => {
         searchContainer.classList.remove("hidden");
@@ -157,6 +153,18 @@ function setupEventListeners() {
         searchContainer.classList.add("hidden");
         fetchUserLocationWeather();
     });
+
+    if (addFavBtn) {
+        addFavBtn.addEventListener("click", () => {
+            if (!appSettings.favorites.includes(currentCityName)) {
+                appSettings.favorites.push(currentCityName);
+                saveSettings();
+                alert(`${currentCityName} added to your favorite locations!`);
+            } else {
+                alert(`${currentCityName} is already in your favorites.`);
+            }
+        });
+    }
 
     searchInput.addEventListener("input", (e) => {
         const query = e.target.value.trim();
@@ -257,7 +265,7 @@ function reverseGeocode(lat, lon) {
 
 async function fetchWeatherData(lat, lon, cityName) {
     try {
-        hideErrorBanner(); // Clear any previous error banner upon successful data call
+        hideErrorBanner();
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`;
         
         const response = await fetch(url);
@@ -276,36 +284,43 @@ async function fetchWeatherData(lat, lon, cityName) {
     }
 }
 
-// Renders every part of the dashboard from a weather-data payload. Used both
-// after a fresh fetch and after a settings change (unit, toggles) so we
-// never need a second fetch just to re-render. Does not touch the animated
-// background/particles — that's a separate concern, see applyWeatherVisuals().
 function renderAllWeather(data, cityName) {
-    updateCurrentWeather(data, cityName);
-    updateHourlyWeather(data);
-    updateDailyForecast(data);
-    updateDetails(data);
-    updateLifestyle(data);
-    updateWeatherWidgetPreview(data, cityName);
-    applyWeatherInformationVisibility();
+    try {
+        updateCurrentWeather(data, cityName);
+        updateHourlyWeather(data);
+        updateDailyForecast(data);
+        updateDetails(data);
+        updateLifestyle(data);
+        updateWeatherWidgetPreview(data, cityName);
+        applyWeatherInformationVisibility();
+        hideErrorBanner(); // Explicitly clear banner once rendering succeeds
+    } catch (err) {
+        console.error("Rendering error:", err);
+    }
 }
-
-// Re-renders from the cached payload only — no network call. Used when the
-// user changes display settings like temperature unit or info toggles.
 function rerenderFromCache() {
-if (!lastWeatherData) return;
+    if (!lastWeatherData) return;
     renderAllWeather(lastWeatherData, currentCityName);
 }
 
-// Single source of truth for temperature display. Every place that shows a
-// temperature routes through here so a unit change only ever needs to
-// update this one function's output, not each caller.
 function formatTemp(celsius) {
     if (celsius === null || celsius === undefined || Number.isNaN(celsius)) return "--°";
     const value = appSettings.temperatureUnit === "F"
         ? (celsius * 9 / 5) + 32
         : celsius;
     return `${Math.round(value)}°`;
+}
+
+function formatWind(speedKmh) {
+    if (speedKmh === null || speedKmh === undefined || Number.isNaN(speedKmh)) return "--";
+    if (appSettings.windUnit === "mph") {
+        return `${Math.round(speedKmh * 0.621371)}`;
+    }
+    return `${Math.round(speedKmh)}`;
+}
+
+function getWindUnitLabel() {
+    return appSettings.windUnit === "mph" ? "mph" : "km/h";
 }
 
 function updateCurrentWeather(data, cityName) {
@@ -334,10 +349,7 @@ function updateHourlyWeather(data) {
     const codes = data.hourly.weather_code;
     const precip = data.hourly.precipitation_probability;
 
-    // Use current.time from the API (location-local timezone) to find the
-    // correct starting index — avoids mismatch when the user's browser timezone
-    // differs from the searched location's timezone.
-    const currentHourStr = data.current.time.substring(0, 13); // "YYYY-MM-DDTHH"
+    const currentHourStr = data.current.time.substring(0, 13);
     const startIndex = Math.max(0, times.findIndex(t => t.startsWith(currentHourStr)));
 
     for (let i = startIndex; i < startIndex + 24 && i < times.length; i++) {
@@ -359,6 +371,15 @@ function updateHourlyWeather(data) {
         hourlyScroll.appendChild(item);
     }
 }
+function classifyWeatherCode(code) {
+    if (code === 0 || code === 1)                  return "clear";
+    if (code === 2 || code === 3)                  return "cloudy";
+    if (code === 45 || code === 48)                return "fog";
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86)  return "snow";
+    if (code >= 95)                                return "storm";
+    return "clear";
+}
 
 function updateDailyForecast(data) {
     const forecastList = document.getElementById("forecast-list");
@@ -375,7 +396,6 @@ function updateDailyForecast(data) {
     const span = overallMax - overallMin || 1;
 
     days.forEach((dayStr, index) => {
-        // Correct local date parsing without timezone offset shifts
         const [year, month, day] = dayStr.split('-');
         const date = new Date(year, month - 1, day);
         const dayName = index === 0 ? "Today" : date.toLocaleDateString([], { weekday: 'short' });
@@ -384,9 +404,6 @@ function updateDailyForecast(data) {
         const min = formatTemp(mins[index]);
         const icon = getWeatherIcon(codes[index]);
 
-        // Bar proportions are computed from raw Celsius values — since °F is
-        // a linear transform of °C, the relative percentages are identical
-        // in either unit, so no conversion is needed here.
         const leftPercent = ((mins[index] - overallMin) / span) * 100;
         const widthPercent = ((maxs[index] - mins[index]) / span) * 100;
 
@@ -436,14 +453,20 @@ function updateDetails(data) {
     }
 
     // Wind
-    const windSpeed = Math.round(current.wind_speed_10m);
+    const windSpeedRaw = current.wind_speed_10m;
+    const windSpeedFormatted = formatWind(windSpeedRaw);
     const windDir = current.wind_direction_10m;
     const windEl = document.getElementById("wind-val");
+    const windUnitEl = document.querySelector(".wind-number .unit");
     const compassEl = document.getElementById("compass-needle");
     const windDescEl = document.getElementById("wind-desc");
-    if (windEl) windEl.textContent = windSpeed;
+    if (windEl) windEl.textContent = windSpeedFormatted;
+    if (windUnitEl) windUnitEl.textContent = getWindUnitLabel();
     if (compassEl) compassEl.style.transform = `rotate(${windDir}deg)`;
-    if (windDescEl) windDescEl.textContent = windSpeed < 1 ? "Calm" : windSpeed < 12 ? "Light breeze" : windSpeed < 29 ? "Moderate breeze" : windSpeed < 50 ? "Fresh breeze" : "Strong wind";
+    if (windDescEl) {
+        const speedInKmh = windSpeedRaw;
+        windDescEl.textContent = speedInKmh < 1 ? "Calm" : speedInKmh < 12 ? "Light breeze" : speedInKmh < 29 ? "Moderate breeze" : speedInKmh < 50 ? "Fresh breeze" : "Strong wind";
+    }
 
     // Sunset / Sunrise
     if (daily.sunrise && daily.sunset) {
@@ -456,7 +479,7 @@ function updateDetails(data) {
     }
 
     // Humidity
-const humidity = current.relative_humidity_2m;
+    const humidity = current.relative_humidity_2m;
     const humEl = document.getElementById("humidity-val");
     const humDescEl = document.getElementById("humidity-desc");
     if (humEl) humEl.textContent = `${humidity} %`;
@@ -469,7 +492,7 @@ const humidity = current.relative_humidity_2m;
     if (pressEl) pressEl.textContent = `${pressure} hPa`;
     if (pressDescEl) pressDescEl.textContent = pressure > 1020 ? "High pressure — fair weather" : pressure < 1000 ? "Low pressure — unsettled weather" : "Normal air pressure";
 
-    // Visibility — hourly field; use timezone-safe index
+    // Visibility
     const currentHourStr = data.current.time.substring(0, 13);
     const visIdx = Math.max(0, (data.hourly.time || []).findIndex(t => t.startsWith(currentHourStr)));
     if (data.hourly && Array.isArray(data.hourly.visibility) && typeof data.hourly.visibility[visIdx] === "number") {
@@ -502,37 +525,51 @@ function updateLifestyle(data) {
 
 function getWeatherDescription(code) {
     const descriptions = {
-        0: "Clear sky",
-        1: "Mainly clear",
-        2: "Partly cloudy",
-        3: "Overcast",
-        45: "Foggy",
+        0:  "Clear sky",
+        1:  "Mainly clear",
+        2:  "Partly cloudy",
+        3:  "Overcast",
+        45: "Fog",
+        48: "Icy fog",
         51: "Light drizzle",
+        53: "Drizzle",
+        55: "Heavy drizzle",
+        56: "Light freezing drizzle",
+        57: "Freezing drizzle",
         61: "Light rain",
         63: "Moderate rain",
-        80: "Rain showers",
-        95: "Thunderstorm with hail"
+        65: "Heavy rain",
+        66: "Light freezing rain",
+        67: "Freezing rain",
+        71: "Light snowfall",
+        73: "Moderate snowfall",
+        75: "Heavy snowfall",
+        77: "Snow grains",
+        80: "Light showers",
+        81: "Moderate showers",
+        82: "Violent showers",
+        85: "Light snow showers",
+        86: "Heavy snow showers",
+        95: "Thunderstorm",
+        96: "Thunderstorm with hail",
+        99: "Thunderstorm with heavy hail"
     };
-    return descriptions[code] || "Fair";
+    return descriptions[code] ?? "Fair";
 }
 
 function getWeatherIcon(code) {
-    if (code === 0) return "☀️";
-    if (code >= 1 && code <= 2) return "⛅";
-    if (code === 3) return "☁️";
-    if (code >= 51 && code <= 67) return "🌧️";
-    if (code >= 71 && code <= 77) return "❄️";
-    if (code >= 95) return "⛈️";
+    if (code === 0)                        return "☀️";
+    if (code === 1 || code === 2)          return "⛅";
+    if (code === 3)                        return "☁️";
+    if (code === 45 || code === 48)        return "🌫️";
+    if (code >= 51 && code <= 57)          return "🌦️";
+    if (code >= 61 && code <= 67)          return "🌧️";
+    if (code >= 71 && code <= 77)          return "❄️";
+    if (code >= 80 && code <= 82)          return "🌧️";
+    if (code === 85 || code === 86)        return "🌨️";
+    if (code >= 95)                        return "⛈️";
     return "🌤️";
 }
-
-
-/* =========================================================================
-   WEATHER INFORMATION VISIBILITY (Settings → Weather information)
-   Shows/hides whole dashboard sections and individual detail cards. Cards
-   stay in the DOM (display:none) rather than being removed, so re-enabling
-   a toggle doesn't require re-fetching or rebuilding anything.
-   ========================================================================= */
 
 function applyWeatherInformationVisibility() {
     const info = appSettings.weatherInformation;
@@ -546,8 +583,6 @@ function applyWeatherInformationVisibility() {
     setDetailCardVisible("feelsLike", info.feelsLike);
     setDetailCardVisible("visibility", info.visibility);
     setDetailCardVisible("pressure", info.pressure);
-    // AQI has no card yet (the current API pipeline doesn't provide air
-    // quality data) — the toggle is disabled in the UI, nothing to apply.
 }
 
 function setSectionVisible(sectionId, visible) {
@@ -562,13 +597,6 @@ function setDetailCardVisible(detailId, visible) {
     el.classList.toggle("hidden", !visible);
 }
 
-
-/* =========================================================================
-   SECTION ORDER (three-dot menu → Reset to default order)
-   Applies appSettings.sectionOrder to the dashboard via CSS `order`. This is
-   fully independent of "Reset app data" — it only ever touches order.
-   ========================================================================= */
-
 function applySectionOrder() {
     appSettings.sectionOrder.forEach((sectionId, index) => {
         const el = document.querySelector(`[data-section-id="${sectionId}"]`);
@@ -581,11 +609,6 @@ function resetToDefaultOrder() {
     saveSettings();
     applySectionOrder();
 }
-
-
-/* =========================================================================
-   TEMPERATURE UNIT
-   ========================================================================= */
 
 function setTemperatureUnit(unit) {
     if (unit !== "C" && unit !== "F") return;
@@ -607,12 +630,21 @@ function syncTempUnitControls() {
     if (settingsF) settingsF.checked = unit === "F";
 }
 
+function setWindUnit(unit) {
+    if (unit !== "km/h" && unit !== "mph") return;
+    appSettings.windUnit = unit;
+    saveSettings();
+    rerenderFromCache();
+    syncWindUnitControls();
+}
 
-/* =========================================================================
-   UPDATE FREQUENCY
-   Always clears the previous interval before creating a new one, so there
-   is never more than one refresh timer alive at once.
-   ========================================================================= */
+function syncWindUnitControls() {
+    const unit = appSettings.windUnit;
+    const kmhEl = document.getElementById("windunit-kmh");
+    const mphEl = document.getElementById("windunit-mph");
+    if (kmhEl) kmhEl.checked = unit === "km/h";
+    if (mphEl) mphEl.checked = unit === "mph";
+}
 
 const FREQUENCY_MINUTES = {
     auto: 30,
@@ -629,7 +661,7 @@ function applyUpdateFrequency() {
     }
 
     const freq = appSettings.updateFrequency;
-    if (freq === "manual") return; // no automatic refresh
+    if (freq === "manual") return;
 
     const minutes = FREQUENCY_MINUTES[freq] || FREQUENCY_MINUTES.auto;
     refreshTimerId = setInterval(() => {
@@ -643,11 +675,6 @@ function setUpdateFrequency(freq) {
     applyUpdateFrequency();
 }
 
-
-/* =========================================================================
-   THEME
-   ========================================================================= */
-
 let systemThemeMediaQuery = null;
 
 function applyTheme() {
@@ -659,7 +686,6 @@ function applyTheme() {
         appSettings.appearance.reduceAnimations ? "true" : "false"
     );
 
-    // Keep following the OS setting live, but only ever register one listener.
     if (!systemThemeMediaQuery) {
         systemThemeMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
         systemThemeMediaQuery.addEventListener("change", () => {
@@ -680,32 +706,32 @@ function setTheme(theme) {
     applyTheme();
 }
 
-
-/* =========================================================================
-   WEATHER ANIMATION / ANIMATED BACKGROUND
-   Preserves the existing rain/snow particle CSS (fallRain/fallSnow,
-   .rain-particle/.snow-particle) and existing #weather-bg element — this
-   wires real weather-condition-driven behaviour into them rather than
-   introducing a second system.
-   ========================================================================= */
-
 const WEATHER_BACKGROUNDS = {
-    clear:   { day: "linear-gradient(135deg, #4a90d9 0%, #2c5f8a 100%)", night: "linear-gradient(135deg, #1b2540 0%, #0c1220 100%)" },
-    cloudy:  { day: "linear-gradient(135deg, #5c6b7a 0%, #384959 100%)", night: "linear-gradient(135deg, #2a3542 0%, #151c24 100%)" },
-    rain:    { day: "linear-gradient(135deg, #3a4a5c 0%, #1c2630 100%)", night: "linear-gradient(135deg, #202a35 0%, #10151c 100%)" },
-    snow:    { day: "linear-gradient(135deg, #7a8ba0 0%, #4a5a6c 100%)", night: "linear-gradient(135deg, #2e3a48 0%, #161d24 100%)" },
-    storm:   { day: "linear-gradient(135deg, #2e3440 0%, #14181f 100%)", night: "linear-gradient(135deg, #1a1e26 0%, #0a0c0f 100%)" }
+    clear:   { 
+        day: "linear-gradient(135deg, #2980b9 0%, #6dd5ed 50%, #f1c40f 100%)", 
+        night: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)" 
+    },
+    cloudy:  { 
+        day: "linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%)", 
+        night: "linear-gradient(135deg, #232526 0%, #414345 100%)" 
+    },
+    rain:    { 
+        day: "linear-gradient(135deg, #373b44 0%, #4286f4 100%)", 
+        night: "linear-gradient(135deg, #141e30 0%, #243b55 100%)" 
+    },
+    snow:    { 
+        day: "linear-gradient(135deg, #e6dada 0%, #274046 100%)", 
+        night: "linear-gradient(135deg, #1f2937 0%, #111827 100%)" 
+    },
+    storm:   { 
+        day: "linear-gradient(135deg, #1f1c2c 0%, #928dab 100%)", 
+        night: "linear-gradient(135deg, #09090e 0%, #1a1a2e 100%)" 
+    },
+    fog:     { 
+        day: "linear-gradient(135deg, #606c88 0%, #3f4c6b 100%)", 
+        night: "linear-gradient(135deg, #2c3e50 0%, #000000 100%)" 
+    }
 };
-
-function classifyWeatherCode(code) {
-    if (code === 0 || code === 1) return "clear";
-    if (code === 2 || code === 3 || code === 45) return "cloudy";
-    if (code >= 51 && code <= 67) return "rain";
-    if (code >= 71 && code <= 77) return "snow";
-    if (code >= 80 && code <= 82) return "rain";
-    if (code >= 95) return "storm";
-    return "clear";
-}
 
 function applyWeatherVisuals() {
     if (particleIntervalId) {
@@ -713,7 +739,10 @@ function applyWeatherVisuals() {
         particleIntervalId = null;
     }
     const particlesContainer = document.getElementById("particles-container");
+    const skyVisuals = document.getElementById("sky-visuals");
+    
     if (particlesContainer) particlesContainer.innerHTML = "";
+    if (skyVisuals) skyVisuals.innerHTML = "";
 
     if (!lastWeatherData) return;
 
@@ -721,50 +750,68 @@ function applyWeatherVisuals() {
     const isDay = lastWeatherData.current.is_day !== 0;
     const category = classifyWeatherCode(code);
 
-    // Background
+    // App Background Gradient
     const bgEl = document.getElementById("weather-bg");
     if (bgEl) {
         if (appSettings.appearance.animatedBackground) {
             const variant = WEATHER_BACKGROUNDS[category] || WEATHER_BACKGROUNDS.clear;
             bgEl.style.background = isDay ? variant.day : variant.night;
         } else {
-            bgEl.style.background = ""; // falls back to the default --bg-gradient
+            bgEl.style.background = ""; 
         }
     }
 
-    // Particles
-if (!appSettings.appearance.weatherAnimation) return;
-    if (category !== "rain" && category !== "snow") return;
+    // Render Sun/Moon and Clouds inside the App Header Box
+    if (skyVisuals) {
+        const celestial = document.createElement("div");
+        celestial.className = "celestial-body";
+        celestial.textContent = isDay ? "☀️" : "🌕";
+        skyVisuals.appendChild(celestial);
 
-    const particleType = category === "rain" ? "rain-particle" : "snow-particle";
-    const maxParticles = appSettings.appearance.reduceAnimations ? 14 : 40;
-    let spawned = 0;
+        if (category === "cloudy" || category === "rain" || category === "storm" || category === "fog" || category === "snow") {
+            for (let i = 0; i < 2; i++) {
+                const cloud = document.createElement("div");
+                cloud.className = "cloud-layer";
+                cloud.style.top = `${15 + (i * 35)}%`;
+                cloud.style.width = `${160 + Math.random() * 80}px`;
+                cloud.style.height = `${40 + Math.random() * 20}px`;
+                cloud.style.animationDuration = `${18 + (i * 8)}s`;
+                cloud.style.animationDelay = `-${i * 5}s`;
+                cloud.style.opacity = isDay ? "0.35" : "0.2";
+                skyVisuals.appendChild(cloud);
+            }
+        }
+    }
 
-    particleIntervalId = setInterval(() => {
-        if (!particlesContainer) return;
-        if (spawned >= maxParticles) spawned = 0; // recycle count, keep DOM small
+    if (!appSettings.appearance.weatherAnimation || !particlesContainer) return;
 
-        const particle = document.createElement("div");
-        particle.className = particleType;
-        particle.style.left = `${Math.random() * 100}%`;
-        const duration = category === "rain" ? 0.6 + Math.random() * 0.5 : 3 + Math.random() * 3;
-        particle.style.animationDuration = `${duration}s`;
-        particlesContainer.appendChild(particle);
-        spawned++;
-
-        // Clean up each particle after its animation finishes so the
-        // particle container never grows without bound.
-        setTimeout(() => particle.remove(), duration * 1000 + 200);
-    }, category === "rain" ? 90 : 260);
+    // Render falling precipitation across the screen if raining/snowing
+    if (category === "rain" || category === "storm") {
+        const maxParticles = appSettings.appearance.reduceAnimations ? 12 : 35;
+        for (let i = 0; i < maxParticles; i++) {
+            const particle = document.createElement("div");
+            particle.className = "rain-particle";
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${-20 - (Math.random() * 40)}px`;
+            const duration = 0.4 + Math.random() * 0.3;
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.animationDelay = `${Math.random() * 2}s`;
+            particlesContainer.appendChild(particle);
+        }
+    } else if (category === "snow") {
+        const maxParticles = appSettings.appearance.reduceanimations ? 12 : 30;
+        for (let i = 0; i < maxParticles; i++) {
+            const particle = document.createElement("div");
+            particle.className = "snow-particle";
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${-20 - (Math.random() * 40)}px`;
+            const duration = 2 + Math.random() * 2;
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.animationDelay = `${Math.random() * 3}s`;
+            particlesContainer.appendChild(particle);
+        }
+    }
 }
-
-
-/* =========================================================================
-   WEATHER WIDGET PREVIEW
-   Configures a compact preview of what an eventual Android home-screen
-   widget would show, driven entirely by appSettings.weatherWidget.
-   ========================================================================= */
-
 function updateWeatherWidgetPreview(data, cityName) {
     const preview = document.getElementById("widget-preview");
     if (!preview) return;
@@ -801,10 +848,12 @@ function updateWeatherWidgetPreview(data, cityName) {
         rowItems.push(`H:${formatTemp(daily.temperature_2m_max[0])} L:${formatTemp(daily.temperature_2m_min[0])}`);
     }
     if (w.showPrecipitation && data.hourly && data.hourly.precipitation_probability) {
-        rowItems.push(`${data.hourly.precipitation_probability[new Date().getHours()] || 0}% rain`);
+        const wHourStr = data.current.time.substring(0, 13);
+        const wIdx = Math.max(0, data.hourly.time.findIndex(t => t.startsWith(wHourStr)));
+        rowItems.push(`${data.hourly.precipitation_probability[wIdx] || 0}% rain`);
     }
     if (w.showWind) {
-        rowItems.push(`${Math.round(current.wind_speed_10m)} km/h wind`);
+        rowItems.push(`${formatWind(current.wind_speed_10m)} ${getWindUnitLabel()} wind`);
     }
     if (w.showHumidity) {
         rowItems.push(`${current.relative_humidity_2m}% humidity`);
@@ -817,23 +866,12 @@ function updateWeatherWidgetPreview(data, cityName) {
         parts.push(`<div class="wp-row">${rowItems.map(t => `<span>${t}</span>`).join("")}</div>`);
     }
 
-    // Widget style trims how much of the above actually renders.
     let visibleParts = parts;
     if (w.style === "compact") visibleParts = parts.slice(0, 2);
     else if (w.style === "standard") visibleParts = parts.slice(0, 3);
-    // "detailed" shows everything selected
 
     preview.innerHTML = visibleParts.join("") || `<div class="row-note">Nothing selected to show</div>`;
 }
-
-
-/* =========================================================================
-   THREE-DOT MENU + PANELS + SETTINGS PAGE
-   Wiring is attached exactly once from initSettingsUI() (called once from
-   initApp()). Values are (re)populated separately via
-   populateSettingsControls() so a data reset can refresh the UI without
-   re-attaching listeners.
-   ========================================================================= */
 
 const WIDGET_TOGGLE_FIELDS = [
     ["widget-show-temp", "showTemperature"],
@@ -935,14 +973,12 @@ function wireMenu() {
         else openMenu();
     });
 
-    // Close on outside click — single delegated listener, not re-added per open.
     document.addEventListener("click", (e) => {
         if (menu.classList.contains("open") && !menu.contains(e.target) && e.target !== menuBtn) {
             closeMenu();
         }
     });
 
-    // Close on Escape.
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape" && menu.classList.contains("open")) closeMenu();
     });
@@ -971,7 +1007,6 @@ function wireMenu() {
 }
 
 function wirePanels() {
-    // Clicking the dim backdrop (not the sheet/dialog itself) closes a panel.
     ALL_PANEL_IDS.forEach((id) => {
         const overlay = document.getElementById(id);
         if (!overlay) return;
@@ -980,7 +1015,6 @@ function wirePanels() {
         });
     });
 
-    // Escape closes whichever panel is currently open — single listener.
     document.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
         ALL_PANEL_IDS.forEach((id) => {
@@ -1030,6 +1064,8 @@ function wireTempUnitPanel() {
     wireRadioListener("tempunit-f", () => setTemperatureUnit("F"));
     wireRadioListener("settings-tempunit-c", () => setTemperatureUnit("C"));
     wireRadioListener("settings-tempunit-f", () => setTemperatureUnit("F"));
+    wireRadioListener("windunit-kmh", () => setWindUnit("km/h"));
+    wireRadioListener("windunit-mph", () => setWindUnit("mph"));
 }
 
 function wireFrequencyPanel() {
@@ -1039,7 +1075,6 @@ function wireFrequencyPanel() {
 }
 
 function wireSettingsPanel() {
-    // General
     const langEl = document.getElementById("setting-language");
     if (langEl) {
         langEl.addEventListener("change", () => {
@@ -1057,7 +1092,6 @@ function wireSettingsPanel() {
         saveSettings();
     });
 
-    // Appearance
     wireRadioListener("theme-system", () => setTheme("system"));
     wireRadioListener("theme-light", () => setTheme("light"));
     wireRadioListener("theme-dark", () => setTheme("dark"));
@@ -1079,18 +1113,14 @@ function wireSettingsPanel() {
         applyWeatherVisuals();
     });
 
-    // Weather information
-WEATHER_INFO_TOGGLE_FIELDS.forEach(([id, field]) => {
+    WEATHER_INFO_TOGGLE_FIELDS.forEach(([id, field]) => {
         wireToggleListener(id, (val) => {
             appSettings.weatherInformation[field] = val;
             saveSettings();
             rerenderFromCache();
         });
     });
-    // AQI toggle is intentionally disabled in the markup — no data source
-    // exists in the current API pipeline, so it's shown but not wired.
 
-    // Notifications — settings/state only, no native notification calls.
     NOTIF_TOGGLE_FIELDS.forEach(([id, field]) => {
         wireToggleListener(id, (val) => {
             appSettings.notifications[field] = val;
@@ -1098,7 +1128,6 @@ WEATHER_INFO_TOGGLE_FIELDS.forEach(([id, field]) => {
         });
     });
 
-    // Location
     LOCATION_TOGGLE_FIELDS.forEach(([id, field]) => {
         wireToggleListener(id, (val) => {
             appSettings.location[field] = val;
@@ -1106,7 +1135,6 @@ WEATHER_INFO_TOGGLE_FIELDS.forEach(([id, field]) => {
         });
     });
 
-    // Data
     const clearBtn = document.getElementById("clear-cache-btn");
     if (clearBtn) clearBtn.addEventListener("click", clearCachedWeatherData);
 
@@ -1139,10 +1167,9 @@ function wireConfirmDialogs() {
     }
 }
 
-// Sets every control's displayed value from appSettings, without attaching
-// any listeners. Safe to call repeatedly (e.g. after a data reset).
 function populateSettingsControls() {
     syncTempUnitControls();
+    syncWindUnitControls();
 
     Object.keys(FREQ_RADIO_MAP).forEach((id) => {
         const el = document.getElementById(id);
@@ -1212,21 +1239,11 @@ function initSettingsUI() {
     wireConfirmDialogs();
 }
 
-
-/* =========================================================================
-   DATA SECTION (Settings → Data)
-   ========================================================================= */
-
-// Clears the cached weather payload and re-fetches fresh data. Does not
-// touch appSettings at all.
 function clearCachedWeatherData() {
     lastWeatherData = null;
     fetchWeatherData(currentLat, currentLon, currentCityName);
 }
 
-// Full reset — settings AND cached data back to defaults. Deliberately a
-// separate code path from resetToDefaultOrder() so the two can never be
-// conflated: this touches everything, that touches only section order.
 function resetAppData() {
     appSettings = JSON.parse(JSON.stringify(defaultSettings));
     saveSettings();
