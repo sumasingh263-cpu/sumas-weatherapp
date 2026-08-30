@@ -1247,3 +1247,121 @@ body {
     color: #ffffff !important;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
 }
+/* Fix the 3-dots menu icon so it stays visible on the main screen */
+.menu-btn {
+    color: #ffffff !important;
+}
+
+/* Fix the Overflow Menu text visibility */
+.overflow-menu {
+    background: var(--panel-bg) !important;
+}
+
+.menu-item {
+    color: var(--text-primary) !important;
+}
+
+.menu-item:hover, .menu-item:active {
+    background: var(--glass-border) !important;
+}
+
+/* Fix the Settings Panel text visibility */
+.panel-sheet {
+    background: var(--panel-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Apply the correct text colors to all labels inside the panels and remove shadows */
+.panel-title,
+.panel-close-btn,
+.settings-row-label,
+.settings-section-title,
+.settings-subgroup-label,
+.settings-select,
+.confirm-title,
+.confirm-body,
+.widget-preview .wp-temp,
+.widget-preview .wp-condition {
+    color: var(--text-primary) !important;
+    text-shadow: none !important; 
+}
+
+/* Make sure secondary panel notes are slightly dimmed but readable */
+.settings-subgroup-label {
+    color: var(--text-secondary) !important;
+}
+
+/* Fix close button hover inside panels */
+.panel-close-btn:hover {
+    background: var(--glass-border) !important;
+}
+
+/* Fix hidden low temperatures in the 7-day forecast */
+.forecast-temps span:last-child {
+    color: #dcdcdc !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+    font-weight: 500 !important;
+}
+
+
+
+
+/* 1. Fix the High/Low Temperature and Condition text */
+#high-low-display, 
+.main-high-low, 
+#weather-condition {
+    color: #ffffff !important;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9) !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+}
+
+/* 2. Fix the Background Container (Let the JavaScript colors show!) */
+#weather-bg {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 0 !important;
+    /* Removed the transparent override here so your gradients work */
+}
+
+/* 3. Break the clouds and rain out to cover the whole screen */
+#sky-visuals, 
+#particles-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important; 
+    pointer-events: none !important;
+    background: transparent !important; /* Only these should be transparent */
+}
+
+#sky-visuals { z-index: 1 !important; }
+#particles-container { z-index: 2 !important; }
+
+/* 4. Ensure clouds use the full screen space */
+.cloud-layer {
+    position: absolute !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
+
+@keyframes driftClouds {
+    0% { transform: translateX(-300px); }
+    100% { transform: translateX(120vw); }
+}
+
+.cloud-layer {
+    display: block !important;
+    position: absolute !important;
+    border-radius: 500px !important;
+    filter: blur(20px) !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
