@@ -255,12 +255,28 @@ async function searchCityAutocomplete(query) {
     }
 }
 
-function reverseGeocode(lat, lon) {
-    currentLat = lat;
-    currentLon = lon;
-    currentCityName = "Current Location";
-    document.getElementById("city-title").textContent = currentCityName;
-    fetchWeatherData(currentLat, currentLon, currentCityName);
+async function reverseGeocode(lat, lon) {
+    try {
+        // Use a free API to translate coordinates into a real city name
+        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+        const data = await res.json();
+        
+        currentLat = lat;
+        currentLon = lon;
+        // Grab the city name, or fallback to locality/region if city is missing
+        currentCityName = data.city || data.locality || data.principalSubdivision || "Current Location";
+        
+        document.getElementById("city-title").textContent = currentCityName;
+        fetchWeatherData(currentLat, currentLon, currentCityName);
+    } catch (err) {
+        console.error("Reverse geocoding error:", err);
+        // Fallback just in case the API fails
+        currentLat = lat;
+        currentLon = lon;
+        currentCityName = "Current Location";
+        document.getElementById("city-title").textContent = currentCityName;
+        fetchWeatherData(currentLat, currentLon, currentCityName);
+    }
 }
 
 async function fetchWeatherData(lat, lon, cityName) {
@@ -429,14 +445,40 @@ function updateDetails(data) {
     const daily = data.daily;
 
     // UV Index
-    const uvVal = daily.uv_index_max ? Math.round(daily.uv_index_max[0]) : 5;
+    const uvVal = (daily.uv_index_max && daily.uv_index_max[0] !== null) ? Math.round(daily.uv_index_max[0]) : 0;
     const uvEl = document.getElementById("uv-num");
     const uvLvlEl = document.getElementById("uv-level");
     const uvDescEl = document.getElementById("uv-desc");
-    if (uvEl) uvEl.textContent = uvVal;
-    if (uvLvlEl) uvLvlEl.textContent = uvVal >= 11 ? "Extreme" : uvVal >= 8 ? "Very High" : uvVal >= 6 ? "High" : uvVal >= 3 ? "Moderate" : "Low";
-    if (uvDescEl) uvDescEl.textContent = uvVal >= 8 ? "Apply SPF 50+ sunscreen" : uvVal >= 3 ? "Wear a sun hat when going out" : "No protection required";
 
+    if (uvEl) uvEl.textContent = uvVal;
+    
+    if (uvLvlEl) {
+        if (uvVal >= 11) uvLvlEl.textContent = "Extreme";
+        else if (uvVal >= 8) uvLvlEl.textContent = "Very High";
+        else if (uvVal >= 6) uvLvlEl.textContent = "High";
+        else if (uvVal >= 3) uvLvlEl.textContent = "Moderate";
+        else uvLvlEl.textContent = "Low";
+    }
+    
+    if (uvDescEl) {
+        const code = current.weather_code;
+        // Check if weather is heavily overcast, raining, or snowing (codes 3 through 99)
+        const isCloudyOrRainy = (code >= 3 && code <= 99);
+        
+        if (uvVal >= 11) {
+            uvDescEl.textContent = "Extreme risk — Avoid being outside during midday hours.";
+        } else if (uvVal >= 8) {
+            uvDescEl.textContent = isCloudyOrRainy 
+                ? "High UV despite clouds — Apply SPF 50+ sunscreen." 
+                : "Very high risk — Apply SPF 50+ sunscreen and wear a hat.";
+        } else if (uvVal >= 6) {
+            uvDescEl.textContent = "High risk — Apply sunscreen and seek shade.";
+        } else if (uvVal >= 3) {
+            uvDescEl.textContent = "Moderate risk — Wear sunglasses and a sun hat.";
+        } else {
+            uvDescEl.textContent = "Low risk — No special sun protection required.";
+        }
+    }
     // Feels Like
     const feels = formatTemp(current.apparent_temperature);
     const actual = formatTemp(current.temperature_2m);
@@ -611,7 +653,7 @@ function getWeatherIcon(code) {
     if (code === 0)                        return "☀️";
     if (code === 1 || code === 2)          return "⛅";
     if (code === 3)                        return "☁️";
-    if (code === 45 || code === 48)        return "🌫️";
+    if (code === 45 || code === 48)        return "🌧️";
     if (code >= 51 && code <= 57)          return "🌦️";
     if (code >= 61 && code <= 67)          return "🌧️";
     if (code >= 71 && code <= 77)          return "❄️";
@@ -770,7 +812,7 @@ const WEATHER_BACKGROUNDS = {
     rain: { 
         // Matches the deep, dark stormy blue
         day: "linear-gradient(180deg, #2b394a 0%, #4c627a 100%)", 
-        night: "linear-gradient(180deg, #182230 0%, #2b394a 100%)" 
+        night: "linear-gradient(180deg, #0d141d 0%, #2b394a 100%)" 
     },
     snow: { 
         day: "linear-gradient(180deg, #a5b5c4 0%, #dbe2e8 100%)", 
@@ -785,6 +827,7 @@ const WEATHER_BACKGROUNDS = {
         night: "linear-gradient(180deg, #2c343b 0%, #1a1e24 100%)" 
     }
 };
+   
 
 function applyWeatherVisuals() {
     if (particleIntervalId) {
@@ -814,7 +857,7 @@ function applyWeatherVisuals() {
         }
     }
 
-    // Render Sun/Moon and Clouds inside the App Header Box
+    // Render Sun/Moon and Dynamic Clouds
     if (skyVisuals) {
         const celestial = document.createElement("div");
         celestial.className = "celestial-body";
@@ -822,15 +865,24 @@ function applyWeatherVisuals() {
         skyVisuals.appendChild(celestial);
 
         if (category === "cloudy" || category === "rain" || category === "storm" || category === "fog" || category === "snow") {
-            for (let i = 0; i < 2; i++) {
+            let cloudCount = (category === "rain" || category === "storm") ? 6 : 4;
+            
+            for (let i = 0; i < cloudCount; i++) {
                 const cloud = document.createElement("div");
                 cloud.className = "cloud-layer";
-                cloud.style.top = `${15 + (i * 35)}%`;
-                cloud.style.width = `${160 + Math.random() * 80}px`;
-                cloud.style.height = `${40 + Math.random() * 20}px`;
-                cloud.style.animationDuration = `${18 + (i * 8)}s`;
-                cloud.style.animationDelay = `-${i * 5}s`;
-                cloud.style.opacity = isDay ? "0.35" : "0.2";
+                
+                cloud.style.top = `${Math.random() * 45}%`; 
+                cloud.style.width = `${150 + Math.random() * 200}px`; 
+                cloud.style.height = `${60 + Math.random() * 50}px`;
+                cloud.style.animationDuration = `${12 + Math.random() * 15}s`; 
+                cloud.style.animationDelay = `-${Math.random() * 15}s`; 
+                
+                if (category === "rain" || category === "storm") {
+                     cloud.style.background = isDay ? "rgba(80, 95, 110, 0.95)" : "rgba(30, 40, 50, 0.85)";
+                } else {
+                     cloud.style.background = isDay ? "rgba(255, 255, 255, 0.85)" : "rgba(180, 190, 200, 0.4)";
+                }
+                
                 skyVisuals.appendChild(cloud);
             }
         }
@@ -838,33 +890,36 @@ function applyWeatherVisuals() {
 
     if (!appSettings.appearance.weatherAnimation || !particlesContainer) return;
 
-    // Render falling precipitation across the screen if raining/snowing
+    // Render precipitation particles
     if (category === "rain" || category === "storm") {
-        const maxParticles = appSettings.appearance.reduceAnimations ? 12 : 35;
+        const maxParticles = appSettings.appearance.reduceAnimations ? 15 : 60;
         for (let i = 0; i < maxParticles; i++) {
             const particle = document.createElement("div");
             particle.className = "rain-particle";
             particle.style.left = `${Math.random() * 100}%`;
             particle.style.top = `${-20 - (Math.random() * 40)}px`;
-            const duration = 0.4 + Math.random() * 0.3;
+            const duration = 0.3 + Math.random() * 0.3;
             particle.style.animationDuration = `${duration}s`;
             particle.style.animationDelay = `${Math.random() * 2}s`;
             particlesContainer.appendChild(particle);
         }
     } else if (category === "snow") {
-        const maxParticles = appSettings.appearance.reduceanimations ? 12 : 30;
+        const maxParticles = appSettings.appearance.reduceAnimations ? 15 : 50;
         for (let i = 0; i < maxParticles; i++) {
             const particle = document.createElement("div");
             particle.className = "snow-particle";
             particle.style.left = `${Math.random() * 100}%`;
             particle.style.top = `${-20 - (Math.random() * 40)}px`;
-            const duration = 2 + Math.random() * 2;
+            const duration = 2 + Math.random() * 3;
             particle.style.animationDuration = `${duration}s`;
             particle.style.animationDelay = `${Math.random() * 3}s`;
             particlesContainer.appendChild(particle);
         }
     }
 }
+
+
+
 function updateWeatherWidgetPreview(data, cityName) {
     const preview = document.getElementById("widget-preview");
     if (!preview) return;
